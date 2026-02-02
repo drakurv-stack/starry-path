@@ -1,0 +1,94 @@
+Polish the entire app UI end-to-end to feel premium, consistent, and smooth like the reference screens.
+Apply one unified design system across all screens: Welcome, Onboarding/Quiz, Results, Home Tabs, Panic Button, Coach, Learn, Community, Profile, Garden/Timeline, Insights, Calendar.
+Do NOT add new features; focus only on UI/UX polish, consistency, animations, spacing, and typography.
+Do NOT ask for Autonomous mode—implement directly.
+1) Global Theme (Design System)
+Create/centralize a theme with:
+Background: dark space gradient (black → deep navy → purple)
+Starfield overlay (subtle, performance-safe)
+Typography scale:
+H1 large bold (white)
+H2 medium bold
+Body text soft gray
+Caption smaller muted
+Primary accent: purple/blue gradient
+Success accent: green glow
+Warning accent: amber glow
+Danger accent: red glow
+Corner radius: 18–24 everywhere
+Spacing system: consistent padding/margins (e.g., 16/20/24)
+2) Reusable Premium Components (must be used everywhere)
+Create and refactor screens to use these consistently:
+ScreenContainer (handles gradient background + safe area + scroll)
+GlassCard (blur, border, glow, consistent padding)
+GradientButton (primary) + GhostButton (secondary)
+ProgressBar (glassy track + gradient fill)
+Chip (tags/triggers)
+StatPill (small stats)
+Header (title + subtitle + optional right icon)
+BottomSheet / Modal style (same everywhere)
+3) Navigation Polish
+Smooth transitions between screens (fade/slide)
+Consistent headers/back buttons
+Tab bar styling (glass, icons, subtle glow)
+Remove any abrupt jumps or inconsistent spacing
+4) Screen-by-screen polish requirements
+Welcome / Onboarding
+Carousel indicators styled as glowing dots
+Options/buttons large, pill-shaped, readable
+Progress bar at top for quiz with “Back” + “Skip” aligned perfectly
+Ensure text never clips on smaller phones
+Home
+Top hero streak card (glass + glow)
+Primary CTA (Panic Button) visually dominant
+Cards in a clean grid/stack, consistent height and spacing
+Panic Button
+Make it the most premium screen:
+breathing circle animation smooth
+step transitions elegant
+timer + action checklist looks like a “luxury tool”
+success screen has subtle celebration glow (not childish)
+Coach
+Chat bubbles glass style with consistent spacing
+Typing indicator (3 dots) subtle
+Quick action chips polished and aligned
+Learn
+Lesson cards uniform
+Lesson detail typography readable
+Quiz UI clean with selected state and explanations in glass cards
+Show progress clearly at top
+Community
+Feed cards consistent
+Like/reply buttons match style (icons + counts aligned)
+Thread view clean and readable
+Tags as chips, no clutter
+Profile / Progress / Garden
+Seed card premium
+Timeline cards fade-in smoothly
+Calendar tiles consistent with glow states
+Stats arranged in neat rows (no randomness)
+5) Micro-interactions (premium feel)
+Add subtle animations globally:
+Button press (scale down slightly)
+Card appearance (fade + slight rise)
+Progress bars animate on change
+Achievement/milestone unlock: soft glow pulse
+Haptics hooks optional but don’t add if not already supported
+6) Accessibility + Readability
+Ensure contrast is strong for dark UI
+Increase tap targets (min 44px)
+Avoid tiny text
+Support long names and dynamic text lengths
+7) Performance rules
+Starfield must be light (no heavy particle engine)
+Avoid excessive re-renders
+Keep animations smooth (no stutter)
+8) Final QA pass
+After polish, ensure:
+No misaligned buttons
+No inconsistent fonts/sizes
+No mixed corner radii
+All screens look like the same product
+App feels “premium calm” not “gaming neon”
+9) Deliverable
+Refactor UI so every screen uses the shared components + theme, with consistent spacing, animation, and color across the whole app.

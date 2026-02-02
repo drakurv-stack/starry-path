@@ -11,6 +11,7 @@ import {
   RotateCcw,
   CheckCircle2,
   AlertCircle,
+  ShieldAlert,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
