@@ -261,7 +261,7 @@ export const LESSONS = [
 
 export default function LearnLibrary() {
   const [, navigate] = useLocation();
-  const [progress, setProgress] = useState({ completed: [] });
+  const [progress, setProgress] = useState<{ completed: string[] }>({ completed: [] });
 
   useEffect(() => {
     const raw = localStorage.getItem("learn_v1");

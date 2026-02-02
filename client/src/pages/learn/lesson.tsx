@@ -11,7 +11,8 @@ import {
   Sparkles,
   ArrowLeft,
   Check,
-  Send
+  Send,
+  BookOpen
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,8 +36,18 @@ export default function LessonDetail() {
 
   const handleComplete = () => {
     const raw = localStorage.getItem("learn_v1");
-    let progress = { completed: [], toolResponses: {}, quizScores: {} };
-    if (raw) progress = JSON.parse(raw);
+    let progress: { completed: string[]; toolResponses: Record<string, string>; quizScores: Record<string, string> } = { 
+      completed: [], 
+      toolResponses: {}, 
+      quizScores: {} 
+    };
+    if (raw) {
+      try {
+        progress = JSON.parse(raw);
+      } catch (e) {
+        console.error("Failed to parse learn progress", e);
+      }
+    }
     
     if (!progress.completed.includes(lesson.id)) {
       progress.completed.push(lesson.id);
