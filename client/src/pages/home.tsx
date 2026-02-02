@@ -347,6 +347,24 @@ export default function Home() {
           >
             <button
               type="button"
+              className="glass relative flex flex-col items-center justify-center gap-3 overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/5 p-4 text-center transition hover:bg-white/10 active:scale-[0.98]"
+              onClick={() => navigate("/garden")}
+              data-testid="button-home-seed"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-50" />
+              <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-white/5 ring-1 ring-white/10 shadow-2xl">
+                <Leaf className="h-8 w-8 text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]" />
+              </div>
+              <div className="relative space-y-1">
+                <div className="text-sm font-black tracking-tight text-white uppercase leading-none">Your Seed</div>
+                <div className="text-[9px] font-bold text-white/40 uppercase tracking-widest leading-none">
+                  Stage: {streak >= 7 ? "Sprout" : "Seed"}
+                </div>
+              </div>
+            </button>
+
+            <button
+              type="button"
               className="glass relative rounded-3xl border border-white/10 bg-white/5 p-4 text-left transition hover:bg-white/8"
               onClick={() => navigate("/coach")}
               data-testid="button-coach"
