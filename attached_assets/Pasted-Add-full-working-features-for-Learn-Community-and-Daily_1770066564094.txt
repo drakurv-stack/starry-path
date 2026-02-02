@@ -1,0 +1,34 @@
+Add full working features for Learn, Community, and Daily Check-in.
+Data model (localStorage):
+user: name, createdAt
+checkins[]: {id, dateISO, mood(1-5), urge(0-10), triggers[], note, wins[], relapseBool}
+streak: {current, longest, lastCheckinDateISO, freeSinceISO, orbs}
+communityPosts[]: seeded anonymous posts with {id, authorAlias, createdAt, content, tags[], likesCount, likedByMe, replies[]} where replies are {id, authorAlias, content, createdAt}.
+learnLessons[]: lesson content with sections + action steps + mini quiz.
+Daily Check-in page:
+mood selector (1–5), urge slider (0–10), triggers multi-select (stress, boredom, loneliness, late-night, social media, etc.), note field, “win today” chips, optional “relapse” toggle.
+On submit: save to localStorage, update streak:
+If relapse = true: set current streak = 0, keep longest, set freeSince to tomorrow or next clean date logic.
+If no relapse: if lastCheckinDate was yesterday, streak++ else if today first checkin keep same else if gap >1 reset streak to 1.
+Show “Today’s summary” card after saving + show history list by date.
+Community page (fake but realistic):
+Preload 30–50 anonymous posts (English + Hinglish mix okay) with tags like #urge, #day1, #relapse, #win, #focus.
+Allow: like/unlike (updates count), reply thread (add reply), create new post (anonymous alias generator).
+Add sorting: Latest / Top.
+Add basic content filter: block explicit words; keep it safe.
+Add “You are not alone” header with small stats card (going strong vs folded) using random but stable numbers stored once.
+Learn page:
+Create a structured module list with 8–12 lessons:
+Dopamine loop & habit cycle (cue → craving → response → reward)
+Why novelty is addictive
+Urge surfing (2–5 min technique)
+Environment design (block triggers)
+Replacement habits
+Sleep/stress relationship
+Relapse recovery plan (no shame)
+Relationships & intimacy rebuild
+Focus & productivity reset
+30/60/90 milestones and what changes to expect (careful language)
+Each lesson: short explanation + “Try this now” tool + 3 question quiz + completion state saved in localStorage.
+Show progress bar for Learn completion.
+Keep the same dark space UI style, and ensure all text is non-explicit and includes a disclaimer: informational only, not medical advice.
