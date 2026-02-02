@@ -48,16 +48,60 @@ const REFLECTIONS = [
   "Be patient with your own progress."
 ];
 
+function StarField() {
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      {/* Parallax Starfield Background */}
+      <div 
+        className="absolute inset-0"
+        style={{ transform: `translateY(${scrollY * 0.2}px)` }}
+      >
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(30,58,138,0.15),transparent)] animate-pulse" />
+        {[...Array(40)].map((_, i) => (
+          <motion.div
+            key={i}
+            initial={{ 
+              x: Math.random() * 100 + "%", 
+              y: Math.random() * 100 + "%",
+              opacity: Math.random() * 0.4 + 0.1,
+              scale: Math.random() * 0.4 + 0.3
+            }}
+            animate={{ 
+              opacity: [0.1, 0.4, 0.1],
+              scale: [1, 1.2, 1]
+            }}
+            transition={{ 
+              duration: Math.random() * 4 + 4, 
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            className="absolute w-1 h-1 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.4)]"
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function SeedVisual({ stage }: { stage: string }) {
   return (
     <div className="relative w-48 h-48 flex items-center justify-center">
       <motion.div
         animate={{
-          scale: [1, 1.05, 1],
-          opacity: [0.5, 0.8, 0.5]
+          scale: [1, 1.1, 1],
+          opacity: [0.3, 0.6, 0.3],
+          filter: ["blur(60px)", "blur(80px)", "blur(60px)"]
         }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute inset-0 bg-cyan-500/20 blur-[60px] rounded-full"
+        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute inset-0 bg-cyan-500/30 rounded-full"
       />
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
@@ -101,14 +145,36 @@ export default function SeedGarden() {
   const [, navigate] = useLocation();
   const [streak, setStreak] = useState(0);
   const [panicStats, setPanicStats] = useState({ urgesResisted: 0 });
-  const [reflection] = useState(() => REFLECTIONS[Math.floor(Math.random() * REFLECTIONS.length)]);
+  const [reflection, setReflection] = useState("");
+
+  const triggerHaptic = (type: "light" | "medium" | "success") => {
+    if (typeof window !== "undefined" && window.navigator && window.navigator.vibrate) {
+      if (type === "light") window.navigator.vibrate(10);
+      else if (type === "medium") window.navigator.vibrate(20);
+      else if (type === "success") window.navigator.vibrate([30, 50, 30]);
+    }
+  };
 
   useEffect(() => {
-    setStreak(Number(localStorage.getItem(STREAK_KEY) || 0));
+    const s = Number(localStorage.getItem(STREAK_KEY) || 0);
+    setStreak(s);
     try {
       const raw = localStorage.getItem(PANIC_KEY);
       if (raw) setPanicStats(JSON.parse(raw).stats);
     } catch {}
+
+    // Daily reflection logic
+    const lastReflectionDate = localStorage.getItem("orbit:last_reflection_date");
+    const today = new Date().toDateString();
+    
+    if (lastReflectionDate === today) {
+      setReflection(localStorage.getItem("orbit:current_reflection") || REFLECTIONS[0]);
+    } else {
+      const newRef = REFLECTIONS[Math.floor(Math.random() * REFLECTIONS.length)];
+      setReflection(newRef);
+      localStorage.setItem("orbit:last_reflection_date", today);
+      localStorage.setItem("orbit:current_reflection", newRef);
+    }
   }, []);
 
   const currentStage = useMemo(() => {
@@ -118,10 +184,25 @@ export default function SeedGarden() {
     return STAGES[0];
   }, [streak]);
 
+  // Haptic trigger for stage upgrade (simplified for MVP as streak changes)
+  useEffect(() => {
+    if (streak > 0) {
+      const isMilestone = MILESTONES.some(m => m.day === streak);
+      if (isMilestone) triggerHaptic("medium");
+      
+      const isStageThreshold = STAGES.some(s => s.threshold === streak);
+      if (isStageThreshold) triggerHaptic("success");
+    }
+  }, [streak]);
+
   const progress = useMemo(() => {
     const daysIntoStage = streak - currentStage.threshold;
     return Math.min((daysIntoStage / currentStage.length) * 100, 100);
   }, [streak, currentStage]);
+
+  useEffect(() => {
+    if (progress > 0) triggerHaptic("light");
+  }, [progress]);
 
   const daysToNext = useMemo(() => {
     return Math.max(currentStage.length - (streak - currentStage.threshold), 0);
@@ -129,31 +210,7 @@ export default function SeedGarden() {
 
   return (
     <div className="min-h-dvh app-bg text-foreground flex flex-col relative overflow-hidden">
-      {/* Parallax Starfield Background */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(30,58,138,0.1),transparent)] animate-pulse" />
-        {[...Array(30)].map((_, i) => (
-          <motion.div
-            key={i}
-            initial={{ 
-              x: Math.random() * 100 + "%", 
-              y: Math.random() * 100 + "%",
-              opacity: Math.random() * 0.5 + 0.1,
-              scale: Math.random() * 0.5 + 0.5
-            }}
-            animate={{ 
-              opacity: [0.1, 0.5, 0.1],
-              y: [0, -20, 0]
-            }}
-            transition={{ 
-              duration: Math.random() * 5 + 5, 
-              repeat: Infinity,
-              ease: "linear"
-            }}
-            className="absolute w-1 h-1 bg-white rounded-full"
-          />
-        ))}
-      </div>
+      <StarField />
 
       <div className="mx-auto w-full max-w-[420px] flex-1 flex flex-col px-4 pt-8 pb-4 relative z-10">
         <header className="flex items-center justify-between mb-8">
@@ -187,7 +244,7 @@ export default function SeedGarden() {
           <SeedVisual stage={currentStage.name} />
 
           <div className="w-full mt-12 space-y-8">
-            <Card className="glass glow bg-white/5 border-white/10 p-6 rounded-[2rem] shadow-2xl relative overflow-hidden">
+            <Card className="glass glow bg-white/5 border-white/10 p-6 rounded-[2rem] shadow-2xl relative overflow-hidden group">
               <div className="flex justify-between items-center mb-3 px-1">
                 <span className="text-[10px] font-black uppercase tracking-widest text-white/30">Stage: {currentStage.name}</span>
                 <span className="text-[10px] font-black uppercase tracking-widest text-cyan-400">{daysToNext} days to next phase</span>
@@ -195,29 +252,50 @@ export default function SeedGarden() {
               <div className="h-3 w-full bg-white/5 rounded-full overflow-hidden border border-white/10 relative">
                 <motion.div 
                   initial={{ width: 0 }}
-                  animate={{ width: `${progress}%` }}
-                  transition={{ duration: 1.5, ease: "easeOut" }}
+                  animate={{ 
+                    width: `${progress}%`,
+                    boxShadow: ["0 0 10px rgba(34,211,238,0.2)", "0 0 20px rgba(34,211,238,0.6)", "0 0 10px rgba(34,211,238,0.2)"]
+                  }}
+                  transition={{ 
+                    width: { duration: 1.5, ease: "easeOut" },
+                    boxShadow: { duration: 2, repeat: Infinity }
+                  }}
                   className="absolute top-0 left-0 h-full bg-gradient-to-r from-green-500 to-cyan-500 shadow-[0_0_15px_rgba(34,211,238,0.4)]"
                 />
               </div>
             </Card>
 
             <div className="grid grid-cols-4 gap-2">
-              {MILESTONES.map((m) => (
-                <button
-                  key={m.day}
-                  className={`flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all ${
-                    streak >= m.day 
-                      ? "bg-green-500/10 border-green-500/30 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.1)]" 
-                      : "bg-white/5 border-white/10 text-white/20 opacity-50"
-                  }`}
-                >
-                  <div className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
-                    {streak >= m.day ? <CheckCircle2 className="h-5 w-5" /> : <Lock className="h-4 w-4" />}
-                  </div>
-                  <span className="text-[10px] font-bold uppercase tracking-tighter">{m.day}d</span>
-                </button>
-              ))}
+              {MILESTONES.map((m) => {
+                const isUnlocked = streak >= m.day;
+                return (
+                  <motion.button
+                    key={m.day}
+                    whileHover={isUnlocked ? { scale: 1.05 } : {}}
+                    whileTap={isUnlocked ? { scale: 0.95 } : {}}
+                    initial={isUnlocked ? { scale: 0.9, opacity: 0 } : {}}
+                    animate={isUnlocked ? { 
+                      scale: 1, 
+                      opacity: 1,
+                      boxShadow: ["0 0 0px rgba(34,197,94,0)", "0 0 15px rgba(34,197,94,0.2)", "0 0 0px rgba(34,197,94,0)"]
+                    } : {}}
+                    transition={{
+                      scale: { type: "spring", damping: 15 },
+                      boxShadow: { duration: 3, repeat: Infinity }
+                    }}
+                    className={`flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all ${
+                      isUnlocked 
+                        ? "bg-green-500/10 border-green-500/30 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.1)]" 
+                        : "bg-white/5 border-white/10 text-white/20 opacity-50"
+                    }`}
+                  >
+                    <div className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
+                      {isUnlocked ? <CheckCircle2 className="h-5 w-5" /> : <Lock className="h-4 w-4" />}
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-tighter">{m.day}d</span>
+                  </motion.button>
+                );
+              })}
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -238,14 +316,18 @@ export default function SeedGarden() {
         </div>
 
         <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="mt-8 text-center px-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          className="mt-auto px-4"
         >
-          <p className="text-[13px] text-white/40 italic leading-relaxed">
-            "{reflection}"
-          </p>
+          <Card className="glass bg-white/5 border-white/10 p-5 rounded-[1.5rem] relative overflow-hidden group">
+            <div className="absolute top-0 left-0 w-1 h-full bg-cyan-500/50" />
+            <p className="text-[10px] font-black uppercase tracking-widest text-white/20 mb-2">Garden Reflection</p>
+            <p className="text-[15px] text-white/70 italic leading-relaxed font-[var(--font-serif)]">
+              "{reflection}"
+            </p>
+          </Card>
         </motion.div>
 
         <footer className="mt-8 text-center pb-4">
