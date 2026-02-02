@@ -297,23 +297,23 @@ export default function LearnLibrary() {
           <div className="w-10" />
         </header>
 
-        <Card className="glass glow mb-8 overflow-hidden border-white/10 relative">
-          <div className="absolute top-0 right-0 p-4 opacity-10">
-            <GraduationCap className="h-20 w-20 text-white" />
+        <Card className="glass glow mb-8 overflow-hidden border-white/10 relative fade-up">
+          <div className="absolute top-0 right-0 p-6 opacity-[0.06]">
+            <GraduationCap className="h-24 w-24 text-white" />
           </div>
           <CardContent className="p-6 relative z-10">
-            <div className="flex items-end justify-between mb-4">
+            <div className="flex items-end justify-between mb-5">
               <div>
-                <h2 className="text-2xl font-bold text-white font-[var(--font-serif)]">Progress</h2>
-                <p className="text-sm text-white/60 mt-1">
-                  <span className="text-cyan-400 font-bold">{completedCount}</span> / {totalCount} lessons mastered
+                <h2 className="text-2xl font-bold text-white font-[var(--font-serif)] tracking-tight">Progress</h2>
+                <p className="text-sm text-white/50 mt-1.5">
+                  <span className="text-cyan-400 font-bold">{completedCount}</span> / {totalCount} mastered
                 </p>
               </div>
-              <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white to-white/40">
+              <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white to-white/40">
                 {Math.round(percent)}%
               </div>
             </div>
-            <div className="relative h-2.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+            <div className="relative h-2.5 w-full bg-white/10 rounded-full overflow-hidden">
               <motion.div 
                 initial={{ width: 0 }}
                 animate={{ width: `${percent}%` }}
@@ -322,8 +322,8 @@ export default function LearnLibrary() {
               />
             </div>
             {completedCount === totalCount && (
-              <div className="mt-4 flex items-center gap-2 text-[11px] font-semibold text-cyan-400">
-                <Star className="h-3 w-3 fill-cyan-400" /> All modules complete. Excellent work.
+              <div className="mt-4 flex items-center gap-2 text-[11px] font-bold text-cyan-400">
+                <Star className="h-3.5 w-3.5 fill-cyan-400" /> All modules complete
               </div>
             )}
           </CardContent>
@@ -341,7 +341,7 @@ export default function LearnLibrary() {
                 onClick={() => navigate(`/learn/${lesson.id}`)}
                 className="w-full text-left group"
               >
-                <Card className={`glass hover-elevate transition-all border-white/10 relative overflow-hidden ${isCompleted ? 'bg-white/10 ring-1 ring-cyan-500/20' : 'bg-white/5'}`}>
+                <Card className={`glass-card glass-card-hover transition-all relative overflow-hidden ${isCompleted ? 'bg-white/10 ring-1 ring-cyan-500/20' : ''}`}>
                   {isCompleted && (
                     <div className="absolute top-0 right-0 p-3">
                       <div className="h-6 w-6 rounded-full bg-cyan-500/10 border border-cyan-500/20 grid place-items-center">

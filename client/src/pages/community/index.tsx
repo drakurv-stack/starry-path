@@ -282,7 +282,7 @@ export default function CommunityPage() {
         <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar">
           <button 
             onClick={() => setSelectedTag(null)}
-            className={`shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition ${!selectedTag ? "bg-white text-black" : "bg-white/5 text-white/60 border border-white/10"}`}
+            className={`shrink-0 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all btn-press ${!selectedTag ? "bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.15)]" : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10"}`}
           >
             All Posts
           </button>
@@ -290,7 +290,7 @@ export default function CommunityPage() {
             <button 
               key={tag}
               onClick={() => setSelectedTag(tag)}
-              className={`shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition ${selectedTag === tag ? "bg-white text-black" : "bg-white/5 text-white/60 border border-white/10"}`}
+              className={`shrink-0 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all btn-press ${selectedTag === tag ? "bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.15)]" : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10"}`}
             >
               {tag}
             </button>
@@ -315,7 +315,7 @@ export default function CommunityPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <Card className="glass bg-white/5 border-white/10 overflow-hidden hover-elevate cursor-pointer" onClick={() => setActivePost(post)}>
+              <Card className="glass-card glass-card-hover overflow-hidden cursor-pointer btn-press" onClick={() => setActivePost(post)}>
                 <CardContent className="p-5">
                   <div className="flex items-center gap-3 mb-4">
                     <div className={`h-10 w-10 rounded-full bg-gradient-to-br ${getAvatarColor(post.avatarSeed)} border border-white/10 shadow-inner`} />

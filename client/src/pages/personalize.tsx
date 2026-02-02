@@ -51,10 +51,10 @@ function OptionChip({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-3xl border px-4 py-3 text-left text-[14px] font-semibold transition active:scale-[0.99] ${
+      className={`rounded-3xl border px-5 py-4 text-left text-[14px] font-bold transition-all btn-press min-tap ${
         selected
           ? "border-white/20 bg-white/12 text-white shadow-[0_0_0_1px_rgba(130,87,255,0.25),0_18px_60px_rgba(120,80,255,0.25)]"
-          : "border-white/10 bg-white/5 text-white/85 hover:bg-white/8"
+          : "border-white/10 bg-white/5 text-white/85 hover:bg-white/8 hover:border-white/15"
       }`}
       data-testid={testId}
     >

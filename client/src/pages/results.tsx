@@ -111,11 +111,11 @@ function BenefitBadges() {
       {badges.map((b) => (
         <div
           key={b}
-          className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/80"
+          className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-bold text-white/80"
           data-testid={`badge-benefit-${b.toLowerCase()}`}
         >
           <span className="inline-flex items-center gap-2">
-            <Award className="h-4 w-4 text-white/70" />
+            <Award className="h-4 w-4 text-cyan-400" />
             {b}
           </span>
         </div>
@@ -149,7 +149,7 @@ export default function Results() {
     <div className="min-h-dvh app-bg text-foreground">
       <div className="mx-auto w-full max-w-[420px] px-4 py-8">
         <div className="page-in">
-          <Card className="glass glow overflow-hidden">
+          <Card className="glass glow overflow-hidden fade-up">
             <CardContent className="p-6">
               <div className="flex items-center gap-2 text-xs font-semibold tracking-[0.18em] text-white/60">
                 <Sparkles className="h-4 w-4" />
@@ -181,13 +181,13 @@ export default function Results() {
               <div className="mt-6 grid gap-3">
                 <button
                   type="button"
-                  className="grad-pill shine w-full rounded-full px-5 py-4 text-[15px] font-semibold text-white transition active:scale-[0.99]"
+                  className="grad-pill shine w-full rounded-full px-6 py-5 text-base font-bold text-white transition-all btn-press min-tap"
                   onClick={() => navigate("/home")}
                   data-testid="button-results-go-home"
                 >
                   <span className="inline-flex items-center justify-center gap-2">
                     Continue to Home
-                    <ArrowRight className="h-4 w-4" />
+                    <ArrowRight className="h-5 w-5" />
                   </span>
                 </button>
 

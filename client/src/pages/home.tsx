@@ -179,32 +179,32 @@ export default function Home() {
             </button>
           </div>
 
-          <Card className="glass glow mt-6 overflow-hidden">
+          <Card className="glass glow mt-6 overflow-hidden fade-up">
             <CardContent className="p-6">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div
-                    className="text-xs font-semibold tracking-[0.18em] text-white/60"
+                    className="text-[10px] font-black tracking-[0.25em] text-white/40 uppercase"
                     data-testid="text-seed-kicker"
                   >
-                    YOUR SEED
+                    Your Journey
                   </div>
                   <div
-                    className="mt-1 text-sm font-semibold text-white"
+                    className="mt-1 text-base font-bold text-white tracking-tight"
                     data-testid="text-seed-name"
                   >
                     {seedName}
                   </div>
                   <div
-                    className="mt-2 text-xs text-white/70"
+                    className="mt-2 text-xs text-white/60"
                     data-testid="text-free-since"
                   >
-                    Free-since: {formatDate(freeSince)}
+                    Free since {formatDate(freeSince)}
                   </div>
                 </div>
-                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-white/5 ring-1 ring-white/10">
+                <div className="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-white/10 to-white/5 ring-1 ring-white/10 shadow-lg pulse-glow">
                   <Sparkles
-                    className="h-6 w-6 text-white/85"
+                    className="h-7 w-7 text-white"
                     strokeWidth={1.8}
                   />
                 </div>
@@ -214,48 +214,48 @@ export default function Home() {
                 className="mt-5 grid grid-cols-3 gap-3"
                 data-testid="grid-stats"
               >
-                <div className="rounded-3xl border border-white/10 bg-white/5 p-3">
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                   <div
-                    className="flex items-center gap-2 text-[11px] text-white/60"
+                    className="flex items-center gap-1.5 text-[10px] text-white/50 font-medium"
                     data-testid="text-stat-streak-label"
                   >
-                    <Flame className="h-4 w-4" />
+                    <Flame className="h-3.5 w-3.5 text-orange-400" />
                     Streak
                   </div>
                   <div
-                    className="mt-2 text-2xl font-semibold text-white"
+                    className="mt-2 text-2xl font-bold text-white tracking-tight"
                     data-testid="text-stat-streak-value"
                   >
                     {streak}
                   </div>
                 </div>
 
-                <div className="rounded-3xl border border-white/10 bg-white/5 p-3">
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                   <div
-                    className="flex items-center gap-2 text-[11px] text-white/60"
+                    className="flex items-center gap-1.5 text-[10px] text-white/50 font-medium"
                     data-testid="text-stat-orbs-label"
                   >
-                    <Gem className="h-4 w-4" />
+                    <Gem className="h-3.5 w-3.5 text-purple-400" />
                     Orbs
                   </div>
                   <div
-                    className="mt-2 text-2xl font-semibold text-white"
+                    className="mt-2 text-2xl font-bold text-white tracking-tight"
                     data-testid="text-stat-orbs-value"
                   >
                     {orbs}
                   </div>
                 </div>
 
-                <div className="rounded-3xl border border-white/10 bg-white/5 p-3">
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                   <div
-                    className="flex items-center gap-2 text-[11px] text-white/60"
+                    className="flex items-center gap-1.5 text-[10px] text-white/50 font-medium"
                     data-testid="text-stat-today-label"
                   >
-                    <CalendarCheck className="h-4 w-4" />
+                    <CalendarCheck className="h-3.5 w-3.5 text-cyan-400" />
                     Today
                   </div>
                   <div
-                    className="mt-2 text-xs font-semibold text-white/85"
+                    className="mt-2 text-sm font-bold text-white"
                     data-testid="text-stat-today-value"
                   >
                     {doneToday ? "Done" : "Not yet"}
@@ -266,21 +266,21 @@ export default function Home() {
               <div className="mt-5 grid gap-3">
                 <button
                   type="button"
-                  className={`w-full rounded-full border px-5 py-4 text-[15px] font-semibold transition active:scale-[0.99] ${
+                  className={`w-full rounded-full border px-6 py-5 text-base font-bold transition-all btn-press min-tap ${
                     doneToday
-                      ? "border-white/10 bg-white/5 text-white/60"
+                      ? "border-white/10 bg-white/5 text-white/50"
                       : "grad-pill shine text-white"
                   }`}
                   onClick={markTodayComplete}
                   disabled={doneToday}
                   data-testid="button-mark-today-complete"
                 >
-                  Mark today complete
+                  {doneToday ? "Today complete" : "Mark today complete"}
                 </button>
 
                 <button
                   type="button"
-                  className="w-full rounded-full border border-white/10 bg-white/5 px-5 py-4 text-[15px] font-semibold text-white/90 transition hover:bg-white/10 active:scale-[0.99]"
+                  className="w-full rounded-full border border-white/10 bg-white/5 px-6 py-5 text-base font-semibold text-white/80 transition-all hover:bg-white/8 btn-press min-tap"
                   onClick={relapseReset}
                   data-testid="button-relapse-reset"
                 >
@@ -289,7 +289,7 @@ export default function Home() {
 
                 <button
                   type="button"
-                  className="w-full group relative rounded-full border border-rose-500/30 bg-rose-500/10 px-5 py-4 text-[15px] font-black text-rose-400 transition hover:bg-rose-500/20 active:scale-[0.99] overflow-hidden"
+                  className="w-full group relative rounded-full border border-rose-500/30 bg-rose-500/10 px-6 py-5 text-base font-black text-rose-400 transition-all hover:bg-rose-500/15 hover:border-rose-500/40 btn-press min-tap overflow-hidden"
                   onClick={() => navigate("/panic")}
                   data-testid="button-panic"
                 >
@@ -348,135 +348,135 @@ export default function Home() {
           >
             <button
               type="button"
-              className="glass relative flex flex-col items-center justify-center gap-3 overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/5 p-4 text-center transition hover:bg-white/10 active:scale-[0.98]"
+              className="glass-card glass-card-hover relative flex flex-col items-center justify-center gap-3 overflow-hidden p-5 text-center btn-press min-tap"
               onClick={() => navigate("/garden")}
               data-testid="button-home-seed"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-50" />
-              <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-white/5 ring-1 ring-white/10 shadow-2xl">
-                <Leaf className="h-8 w-8 text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]" />
+              <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-transparent" />
+              <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-white/10 to-white/5 ring-1 ring-white/10 shadow-lg">
+                <Leaf className="h-7 w-7 text-green-400 drop-shadow-[0_0_12px_rgba(74,222,128,0.6)]" />
               </div>
               <div className="relative space-y-1">
-                <div className="text-sm font-black tracking-tight text-white uppercase leading-none">Your Seed</div>
-                <div className="text-[9px] font-bold text-white/40 uppercase tracking-widest leading-none">
-                  Stage: {streak >= 7 ? "Sprout" : "Seed"}
+                <div className="text-sm font-bold text-white tracking-tight">Your Seed</div>
+                <div className="text-[10px] font-semibold text-white/40 uppercase tracking-wider">
+                  {streak >= 7 ? "Sprout" : "Seed"}
                 </div>
               </div>
             </button>
 
             <button
               type="button"
-              className="glass relative rounded-3xl border border-white/10 bg-white/5 p-4 text-left transition hover:bg-white/8"
+              className="glass-card glass-card-hover relative p-5 text-left btn-press min-tap"
               onClick={() => navigate("/coach")}
               data-testid="button-coach"
             >
-              <div className="grid h-10 w-10 place-items-center rounded-2xl bg-white/5 ring-1 ring-white/10">
-                <MessageCircle className="h-5 w-5 text-white/80" />
+              <div className="grid h-11 w-11 place-items-center rounded-2xl bg-white/5 ring-1 ring-white/10">
+                <MessageCircle className="h-5 w-5 text-cyan-400" />
               </div>
               <div
-                className="mt-3 text-sm font-semibold text-white"
+                className="mt-3 text-sm font-bold text-white tracking-tight"
                 data-testid="text-coach-title"
               >
-                Your Coach
+                AI Coach
               </div>
               <div
-                className="mt-1 text-xs text-white/70"
+                className="mt-1 text-xs text-white/60"
                 data-testid="text-coach-body"
               >
-                Always by your side.
+                Always by your side
               </div>
-              <div className="absolute top-4 right-4 h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)] animate-pulse" />
+              <div className="absolute top-4 right-4 h-2.5 w-2.5 rounded-full bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.8)] animate-pulse" />
             </button>
 
             <button
               type="button"
-              className="glass rounded-3xl border border-white/10 bg-white/5 p-4 text-left transition hover:bg-white/8"
+              className="glass-card glass-card-hover p-5 text-left btn-press min-tap"
               onClick={() => navigate("/daily")}
               data-testid="button-daily-checkin"
             >
-              <div className="grid h-10 w-10 place-items-center rounded-2xl bg-white/5 ring-1 ring-white/10">
-                <CalendarCheck className="h-5 w-5 text-white/80" />
+              <div className="grid h-11 w-11 place-items-center rounded-2xl bg-white/5 ring-1 ring-white/10">
+                <CalendarCheck className="h-5 w-5 text-amber-400" />
               </div>
               <div
-                className="mt-3 text-sm font-semibold text-white"
+                className="mt-3 text-sm font-bold text-white tracking-tight"
                 data-testid="text-daily-checkin-title"
               >
                 Daily Check-in
               </div>
               <div
-                className="mt-1 text-xs text-white/70"
+                className="mt-1 text-xs text-white/60"
                 data-testid="text-daily-checkin-body"
               >
-                {doneToday ? "See today's summary" : "Reflect, reset, continue."}
+                {doneToday ? "See summary" : "Reflect & reset"}
               </div>
             </button>
 
             <button
               type="button"
-              className="glass rounded-3xl border border-white/10 bg-white/5 p-4 text-left transition hover:bg-white/8"
+              className="glass-card glass-card-hover p-5 text-left btn-press min-tap"
               onClick={() => navigate("/learn")}
               data-testid="button-learn"
             >
-              <div className="grid h-10 w-10 place-items-center rounded-2xl bg-white/5 ring-1 ring-white/10">
-                <BookOpen className="h-5 w-5 text-white/80" />
+              <div className="grid h-11 w-11 place-items-center rounded-2xl bg-white/5 ring-1 ring-white/10">
+                <BookOpen className="h-5 w-5 text-purple-400" />
               </div>
               <div
-                className="mt-3 text-sm font-semibold text-white"
+                className="mt-3 text-sm font-bold text-white tracking-tight"
                 data-testid="text-learn-title"
               >
                 Learn
               </div>
               <div
-                className="mt-1 text-xs text-white/70"
+                className="mt-1 text-xs text-white/60 line-clamp-1"
                 data-testid="text-learn-body"
               >
-                Start with: {nextLesson}
+                {nextLesson}
               </div>
             </button>
 
             <button
               type="button"
-              className="glass rounded-3xl border border-white/10 bg-white/5 p-4 text-left transition hover:bg-white/8"
+              className="glass-card glass-card-hover p-5 text-left btn-press min-tap"
               onClick={() => navigate("/community")}
               data-testid="button-community"
             >
-              <div className="grid h-10 w-10 place-items-center rounded-2xl bg-white/5 ring-1 ring-white/10">
-                <Users className="h-5 w-5 text-white/80" />
+              <div className="grid h-11 w-11 place-items-center rounded-2xl bg-white/5 ring-1 ring-white/10">
+                <Users className="h-5 w-5 text-emerald-400" />
               </div>
               <div
-                className="mt-3 text-sm font-semibold text-white"
+                className="mt-3 text-sm font-bold text-white tracking-tight"
                 data-testid="text-community-title-home"
               >
                 Community
               </div>
               <div
-                className="mt-1 text-xs text-white/70"
+                className="mt-1 text-xs text-white/60"
                 data-testid="text-community-body-home"
               >
-                1.2k members online
+                1.2k online
               </div>
             </button>
 
             <button
               type="button"
-              className="glass rounded-3xl border border-white/10 bg-white/5 p-4 text-left transition hover:bg-white/8"
+              className="glass-card glass-card-hover p-5 text-left btn-press min-tap"
               onClick={() => alert("Profile UI only (prototype).")}
               data-testid="button-profile"
             >
-              <div className="grid h-10 w-10 place-items-center rounded-2xl bg-white/5 ring-1 ring-white/10">
+              <div className="grid h-11 w-11 place-items-center rounded-2xl bg-white/5 ring-1 ring-white/10">
                 <User className="h-5 w-5 text-white/80" />
               </div>
               <div
-                className="mt-3 text-sm font-semibold text-white"
+                className="mt-3 text-sm font-bold text-white tracking-tight"
                 data-testid="text-profile-title"
               >
                 Profile
               </div>
               <div
-                className="mt-1 text-xs text-white/70"
+                className="mt-1 text-xs text-white/60"
                 data-testid="text-profile-body"
               >
-                Reset data, settings.
+                Settings
               </div>
             </button>
           </div>

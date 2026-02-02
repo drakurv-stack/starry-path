@@ -61,21 +61,21 @@ function OptionButton({
     <button
       type="button"
       onClick={onClick}
-      className={`w-full rounded-3xl border px-4 py-4 text-left text-[15px] font-semibold leading-snug transition active:scale-[0.99] ${
+      className={`w-full rounded-3xl border px-5 py-4 text-left text-[15px] font-semibold leading-snug transition-all btn-press min-tap ${
         selected
           ? "border-white/20 bg-white/12 text-white shadow-[0_0_0_1px_rgba(130,87,255,0.25),0_18px_60px_rgba(120,80,255,0.25)]"
-          : "border-white/10 bg-white/5 text-white/90 hover:bg-white/8"
+          : "border-white/10 bg-white/5 text-white/90 hover:bg-white/8 hover:border-white/15"
       }`}
       data-testid={testId}
     >
       <span className="flex items-center justify-between gap-3">
         <span className="min-w-0">{label}</span>
         {selected ? (
-          <span className="grid h-7 w-7 place-items-center rounded-full bg-white/10 ring-1 ring-white/10">
+          <span className="grid h-7 w-7 place-items-center rounded-full bg-white/15 ring-1 ring-white/20 shadow-[0_0_20px_rgba(130,87,255,0.3)]">
             <Check className="h-4 w-4 text-white" />
           </span>
         ) : (
-          <span className="h-7 w-7 rounded-full border border-white/10 bg-white/0" />
+          <span className="h-7 w-7 rounded-full border border-white/10 bg-white/0 transition-colors" />
         )}
       </span>
     </button>
@@ -158,7 +158,7 @@ export default function Onboarding() {
               })}
               <button
                 type="button"
-                className="grad-pill shine mt-1 w-full rounded-full px-5 py-4 text-[15px] font-semibold text-white transition active:scale-[0.99]"
+                className="grad-pill shine mt-1 w-full rounded-full px-6 py-5 text-base font-bold text-white transition-all btn-press min-tap"
                 onClick={() => setStep((v) => v + 1)}
                 data-testid="button-onboarding-continue-motivations"
               >
@@ -393,7 +393,7 @@ export default function Onboarding() {
               </div>
               <button
                 type="button"
-                className="grad-pill shine w-full rounded-full px-5 py-4 text-[15px] font-semibold text-white transition active:scale-[0.99]"
+                className="grad-pill shine w-full rounded-full px-6 py-5 text-base font-bold text-white transition-all btn-press min-tap"
                 onClick={() => navigate("/personalize")}
                 data-testid="button-onboarding-finish"
               >
@@ -495,7 +495,7 @@ export default function Onboarding() {
             )}
           </div>
 
-          <Card className="glass glow mt-5 overflow-hidden">
+          <Card className="glass glow mt-5 overflow-hidden fade-up">
             <CardContent className="p-6">
               <div className="mb-4">
                 <div className="mb-2 flex items-center justify-between text-xs text-white/60">
