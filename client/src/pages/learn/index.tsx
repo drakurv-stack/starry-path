@@ -7,7 +7,10 @@ import {
   CheckCircle2,
   Clock,
   ArrowRight,
-  GraduationCap
+  GraduationCap,
+  Sparkles,
+  Flame,
+  Star
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -276,84 +279,111 @@ export default function LearnLibrary() {
   const percent = (completedCount / totalCount) * 100;
 
   return (
-    <div className="min-h-dvh app-bg text-foreground">
-      <div className="mx-auto w-full max-w-[420px] px-4 py-8">
-        <div className="page-in">
-          <header className="flex items-center justify-between mb-6">
-            <button
-              onClick={() => navigate("/home")}
-              className="p-2 -ml-2 rounded-full hover:bg-white/5 text-white/70"
-            >
-              <ChevronLeft className="h-6 w-6" />
-            </button>
-            <div className="text-center">
-              <div className="text-xs font-semibold tracking-[0.2em] text-white/40 uppercase">Academy</div>
-              <div className="text-sm font-semibold text-white flex items-center gap-2">
-                <GraduationCap className="h-4 w-4 text-cyan-400" /> Learn
+    <div className="min-h-dvh app-bg text-foreground flex flex-col">
+      <div className="mx-auto w-full max-w-[420px] flex-1 flex flex-col px-4 pt-8 pb-4">
+        <header className="flex items-center justify-between mb-8">
+          <button
+            onClick={() => navigate("/home")}
+            className="p-2 -ml-2 rounded-full hover:bg-white/5 text-white/70 transition-colors"
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </button>
+          <div className="text-center">
+            <div className="text-xs font-semibold tracking-[0.25em] text-white/40 uppercase mb-1">Academy</div>
+            <div className="text-sm font-semibold text-white flex items-center justify-center gap-2">
+              <Sparkles className="h-4 w-4 text-cyan-400" /> Orbit Learn
+            </div>
+          </div>
+          <div className="w-10" />
+        </header>
+
+        <Card className="glass glow mb-8 overflow-hidden border-white/10 relative">
+          <div className="absolute top-0 right-0 p-4 opacity-10">
+            <GraduationCap className="h-20 w-20 text-white" />
+          </div>
+          <CardContent className="p-6 relative z-10">
+            <div className="flex items-end justify-between mb-4">
+              <div>
+                <h2 className="text-2xl font-bold text-white font-[var(--font-serif)]">Progress</h2>
+                <p className="text-sm text-white/60 mt-1">
+                  <span className="text-cyan-400 font-bold">{completedCount}</span> / {totalCount} lessons mastered
+                </p>
+              </div>
+              <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white to-white/40">
+                {Math.round(percent)}%
               </div>
             </div>
-            <div className="w-10" />
-          </header>
-
-          <Card className="glass glow mb-8 overflow-hidden">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h2 className="text-lg font-bold text-white">Your Progress</h2>
-                  <p className="text-sm text-white/60">{completedCount} of {totalCount} lessons completed</p>
-                </div>
-                <div className="text-2xl font-bold text-cyan-400">{Math.round(percent)}%</div>
+            <div className="relative h-2.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${percent}%` }}
+                transition={{ duration: 1, ease: "easeOut" }}
+                className="absolute top-0 left-0 h-full grad-pill"
+              />
+            </div>
+            {completedCount === totalCount && (
+              <div className="mt-4 flex items-center gap-2 text-[11px] font-semibold text-cyan-400">
+                <Star className="h-3 w-3 fill-cyan-400" /> All modules complete. Excellent work.
               </div>
-              <Progress value={percent} className="h-2" />
-            </CardContent>
-          </Card>
+            )}
+          </CardContent>
+        </Card>
 
-          <div className="space-y-4">
-            {LESSONS.map((lesson) => {
-              const isCompleted = progress.completed?.includes(lesson.id);
-              return (
-                <button
-                  key={lesson.id}
-                  onClick={() => navigate(`/learn/${lesson.id}`)}
-                  className="w-full text-left"
-                >
-                  <Card className={`glass hover-elevate transition-all border-white/10 ${isCompleted ? 'bg-white/10' : 'bg-white/5'}`}>
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-bold text-white text-sm">{lesson.title}</h3>
-                            {isCompleted && <CheckCircle2 className="h-3.5 w-3.5 text-cyan-400" />}
-                          </div>
-                          <p className="text-xs text-white/60 line-clamp-1">{lesson.subtitle}</p>
-                          <div className="flex items-center gap-3 mt-3">
-                            <span className="flex items-center gap-1 text-[10px] text-white/40 font-medium">
-                              <Clock className="h-3 w-3" /> {lesson.time}
-                            </span>
-                            {isCompleted ? (
-                              <Badge variant="secondary" className="bg-cyan-500/20 text-cyan-200 border-none text-[9px] h-4">Completed</Badge>
-                            ) : (
-                              <Badge variant="outline" className="border-white/10 text-white/40 text-[9px] h-4">Not started</Badge>
-                            )}
-                          </div>
+        <div className="space-y-4 flex-1">
+          {LESSONS.map((lesson, idx) => {
+            const isCompleted = progress.completed?.includes(lesson.id);
+            return (
+              <motion.button
+                key={lesson.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                onClick={() => navigate(`/learn/${lesson.id}`)}
+                className="w-full text-left group"
+              >
+                <Card className={`glass hover-elevate transition-all border-white/10 relative overflow-hidden ${isCompleted ? 'bg-white/10 ring-1 ring-cyan-500/20' : 'bg-white/5'}`}>
+                  {isCompleted && (
+                    <div className="absolute top-0 right-0 p-3">
+                      <div className="h-6 w-6 rounded-full bg-cyan-500/10 border border-cyan-500/20 grid place-items-center">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-cyan-400" />
+                      </div>
+                    </div>
+                  )}
+                  <CardContent className="p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <h3 className="font-bold text-white text-[15px] group-hover:text-cyan-300 transition-colors">{lesson.title}</h3>
                         </div>
-                        <div className="p-2 rounded-xl bg-white/5 border border-white/10 group-hover:bg-white/10 transition">
-                          <ArrowRight className="h-4 w-4 text-white/40" />
+                        <p className="text-xs text-white/50 leading-relaxed line-clamp-2 pr-8">{lesson.subtitle}</p>
+                        
+                        <div className="flex items-center gap-4 mt-4">
+                          <span className="flex items-center gap-1.5 text-[10px] text-white/30 font-semibold uppercase tracking-wider">
+                            <Clock className="h-3 w-3" /> {lesson.time}
+                          </span>
+                          {isCompleted ? (
+                            <span className="text-[9px] font-black uppercase tracking-[0.1em] text-cyan-400/80">Mastered</span>
+                          ) : (
+                            <span className="text-[9px] font-black uppercase tracking-[0.1em] text-white/20">Available</span>
+                          )}
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                </button>
-              );
-            })}
-          </div>
-
-          <footer className="mt-8 text-center px-4">
-            <p className="text-[10px] text-white/30 leading-tight">
-              Informational only. Not medical advice. Content is designed for support and education.
-            </p>
-          </footer>
+                      <div className="mt-1 h-8 w-8 rounded-full bg-white/5 border border-white/10 grid place-items-center group-hover:bg-white/10 group-hover:border-white/20 transition-all">
+                        <ArrowRight className="h-4 w-4 text-white/30 group-hover:text-white" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.button>
+            );
+          })}
         </div>
+
+        <footer className="mt-8 text-center px-4 pb-4">
+          <p className="text-[10px] text-white/20 leading-relaxed max-w-[280px] mx-auto">
+            Orbit Academy provides evidence-based support. Not a substitute for professional clinical advice.
+          </p>
+        </footer>
       </div>
     </div>
   );
