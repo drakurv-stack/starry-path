@@ -14,6 +14,7 @@ import {
   Activity,
   Clock,
   TrendingUp,
+  Leaf,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
