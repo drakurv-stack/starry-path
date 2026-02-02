@@ -9,6 +9,7 @@ import Onboarding from "@/pages/onboarding";
 import Personalize from "@/pages/personalize";
 import Results from "@/pages/results";
 import Home from "@/pages/home";
+import CoachPage from "@/pages/coach";
 
 function Router() {
   return (
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/personalize" component={Personalize} />
       <Route path="/results" component={Results} />
       <Route path="/home" component={Home} />
+      <Route path="/coach" component={CoachPage} />
 
       <Route component={NotFound} />
     </Switch>

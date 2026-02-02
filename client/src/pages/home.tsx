@@ -10,6 +10,7 @@ import {
   Users,
   User,
   RotateCcw,
+  MessageCircle,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -312,6 +313,29 @@ export default function Home() {
             className="mt-5 grid grid-cols-2 gap-3"
             data-testid="grid-home-actions"
           >
+            <button
+              type="button"
+              className="glass rounded-3xl border border-white/10 bg-white/5 p-4 text-left transition hover:bg-white/8"
+              onClick={() => navigate("/coach")}
+              data-testid="button-coach"
+            >
+              <div className="grid h-10 w-10 place-items-center rounded-2xl bg-white/5 ring-1 ring-white/10">
+                <MessageCircle className="h-5 w-5 text-white/80" />
+              </div>
+              <div
+                className="mt-3 text-sm font-semibold text-white"
+                data-testid="text-coach-title"
+              >
+                Your Coach
+              </div>
+              <div
+                className="mt-1 text-xs text-white/70"
+                data-testid="text-coach-body"
+              >
+                Always by your side.
+              </div>
+            </button>
+
             <button
               type="button"
               className="glass rounded-3xl border border-white/10 bg-white/5 p-4 text-left transition hover:bg-white/8"
