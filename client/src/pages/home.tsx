@@ -352,7 +352,7 @@ export default function Home() {
             <button
               type="button"
               className="glass rounded-3xl border border-white/10 bg-white/5 p-4 text-left transition hover:bg-white/8"
-              onClick={() => alert("Daily Check-in UI only (prototype).")}
+              onClick={() => navigate("/daily")}
               data-testid="button-daily-checkin"
             >
               <div className="grid h-10 w-10 place-items-center rounded-2xl bg-white/5 ring-1 ring-white/10">
@@ -368,7 +368,7 @@ export default function Home() {
                 className="mt-1 text-xs text-white/70"
                 data-testid="text-daily-checkin-body"
               >
-                Reflect, reset, continue.
+                {doneToday ? "See today's summary" : "Reflect, reset, continue."}
               </div>
             </button>
 
