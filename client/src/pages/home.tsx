@@ -398,7 +398,7 @@ export default function Home() {
             <button
               type="button"
               className="glass rounded-3xl border border-white/10 bg-white/5 p-4 text-left transition hover:bg-white/8"
-              onClick={() => alert("Community UI only (prototype).")}
+              onClick={() => navigate("/community")}
               data-testid="button-community"
             >
               <div className="grid h-10 w-10 place-items-center rounded-2xl bg-white/5 ring-1 ring-white/10">
@@ -414,7 +414,7 @@ export default function Home() {
                 className="mt-1 text-xs text-white/70"
                 data-testid="text-community-body-home"
               >
-                You’re not alone.
+                1.2k members online
               </div>
             </button>
 

@@ -12,6 +12,7 @@ import Home from "@/pages/home";
 import CoachPage from "@/pages/coach";
 import LearnLibrary from "@/pages/learn/index";
 import LessonDetail from "@/pages/learn/lesson";
+import CommunityPage from "@/pages/community/index";
 
 function Router() {
   return (
@@ -25,6 +26,7 @@ function Router() {
       <Route path="/coach" component={CoachPage} />
       <Route path="/learn" component={LearnLibrary} />
       <Route path="/learn/:lessonId" component={LessonDetail} />
+      <Route path="/community" component={CommunityPage} />
 
       <Route component={NotFound} />
     </Switch>

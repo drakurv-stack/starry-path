@@ -1,0 +1,92 @@
+Implement a fully working Community feature that feels real and active, but runs on localStorage only (no backend required).
+Everyone is anonymous (aliases only). Users can post, like, reply, and see a feed that stays after refresh.
+Do NOT ask for Autonomous mode—implement directly.
+1) Screens / Routing
+Create:
+/community → feed screen
+Optional: /community/post/:id → post detail (or open thread in a modal)
+Add a Home card/button that navigates to /community.
+2) Data (localStorage)
+Use key: community_v1
+Store:
+posts[]:
+{ id, authorAlias, avatarSeed, createdAt, content, tags[], likeCount, likedByMe, replyCount, replies[] }
+replies[] inside post:
+{ id, authorAlias, avatarSeed, createdAt, content }
+stats: numbers for “going strong vs folded” (saved once and reused)
+userAlias: the current user alias (generated once)
+lastSeenAt: timestamp (for “new posts” badge)
+activitySeed: used to simulate new posts
+3) Anonymous identity
+Generate alias like: NightWalker_28, BlueComet_14, QuietLion_07
+Generate a simple avatar placeholder (initials or gradient circle) using avatarSeed
+No real names, no profiles, no DMs.
+4) Seed realistic content (VERY IMPORTANT)
+On first open, preload 40–60 posts with:
+Mixed lengths (1–4 lines)
+Tags like: #day1 #urge #win #relapse #focus #sleep #stress #motivation
+Tone: supportive, honest, non-explicit
+Mix English + Hinglish (optional). Keep it safe.
+Also preload some replies (0–6 per post) and likes (random counts).
+5) Feed UI (match your premium UI)
+Dark starry background
+Glass cards for posts
+Top header: “Community” + subtitle “Anonymous support. No judgment.”
+A stats card: “Going strong” vs “Folded” (stored once)
+Tabs/sort:
+Latest
+Top (by likeCount)
+Filter chips (optional): Urges, Wins, Relapse, Focus, Sleep
+Each post card shows:
+alias + “time ago”
+content text
+tags chips
+Like button (heart) + count
+Reply button + replyCount
+“View thread” to open replies
+6) Posting
+Add “Create post”:
+text area
+tags selector (optional)
+post appears instantly at top of feed
+authorAlias = current userAlias
+enforce safe content:
+block explicit sexual words
+show message: “Please keep posts non-explicit and supportive.”
+7) Likes (must feel real)
+Tap Like toggles likedByMe
+Updates likeCount immediately
+Persist to localStorage
+Add micro animation: heart pop / subtle glow
+Also add “fake like drift”:
+When user opens Community, randomly increase likeCount on a few posts by +1 to +3 (only once per session) to make it feel alive.
+Persist the changes.
+8) Replies (threaded)
+In thread view:
+Show existing replies
+Input to add reply
+Reply appears instantly
+Persist
+Add “fake replies”:
+After user posts or replies, schedule 1–2 simulated anonymous replies after a short delay (0.8–2.5s) like:
+“You’ve got this. Try the 10-minute delay.”
+“Day 3 was hardest for me too.”
+Must be clearly supportive and non-explicit.
+Persist them.
+9) “New posts” realism
+Simulate new posts:
+On first open each day (or every X hours), add 1–3 new seeded posts with fresh timestamps.
+Show small badge: “3 new posts since last time”
+Update lastSeenAt when leaving the page.
+10) Safety / compliance
+No explicit descriptions
+No porn links
+No images
+Add footer: “Informational peer support. Not medical advice.”
+11) Done criteria
+Feed loads with seeded posts
+Like/unlike works and persists
+Reply works and persists
+Create post works
+Sorting Latest/Top works
+Fake activity (new likes/posts/replies) works and feels real
