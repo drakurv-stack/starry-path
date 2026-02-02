@@ -7,7 +7,7 @@ import {
   learnLessons, type LearnLesson,
   userLessons, type UserLesson,
   coachMessages, type CoachMessage
-} from "@shared/schema";
+} from "../shared/schema";
 
 export interface IStorage {
   // Users
@@ -95,7 +95,12 @@ export class MemStorage implements IStorage {
     return Array.from(this.checkins.values()).filter(c => c.userId === userId);
   }
   async createCheckin(checkin: InsertCheckin): Promise<Checkin> {
-    const newCheckin: Checkin = { ...checkin, id: this.currentId++ };
+    const newCheckin: Checkin = { 
+      ...checkin, 
+      id: this.currentId++, 
+      note: checkin.note ?? null,
+      relapseBool: checkin.relapseBool ?? false
+    };
     this.checkins.set(newCheckin.id, newCheckin);
     return newCheckin;
   }
