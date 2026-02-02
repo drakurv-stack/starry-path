@@ -1,0 +1,101 @@
+Build a premium Panic Button / Urge Rescue feature that is the core of this app.
+It must be fast, calming, and feel high-end (space gradient + glass cards + glow + smooth animations).
+No backend required—use localStorage only. Do NOT ask for Autonomous mode.
+1) Access + Placement
+Add a large glowing CTA on Home: “Panic Button” / “Take back control”
+Route: /panic
+Also show a small shortcut inside Coach: “Open Panic Button”
+2) Panic Flow (4-stage guided rescue)
+Use a stepper UI (progress dots) with smooth slide transitions:
+Stage 1 — “Name it to tame it” (10 seconds)
+Title: “Pause. You’re safe.”
+Ask:
+Urge level slider (0–10)
+Trigger chips (multi-select): Stress, Boredom, Loneliness, Late night, Social media, Anxiety, Tired, Random
+Primary button: “Start Rescue”
+Secondary link: “Skip → start breathing”
+Stage 2 — Breath Reset (60–90 seconds)
+Glass card with breathing animation:
+Inhale 4s → Hold 2s → Exhale 6s (loop)
+Countdown timer + subtle pulse/glow
+Text changes based on urge level:
+0–3: “Small wave. Let it pass.”
+4–7: “Strong wave. Breathe through the peak.”
+8–10: “Peak urge. Stay with me for 60 seconds.”
+Buttons:
+“I’m calmer → continue”
+“Still strong → extend 60 sec”
+Stage 3 — “Delay & Replace” (10-minute plan)
+Show 3 stacked premium glass cards:
+Card A: 10-Min Delay Timer
+Start / Pause / Reset
+Shows “You’re rewiring your brain right now.”
+Optional: “Lock screen mode” (just UI if not supported)
+Card B: Choose 2 Quick Actions (tap to complete)
+Actions list (checkbox style with micro animations):
+Walk 2 minutes
+Cold water / wash face
+20 push-ups / 1 minute plank
+Journal 3 lines
+Clean desk for 3 minutes
+Message someone (template: “Need a quick distraction”)
+Require completing at least 2 actions OR finishing timer.
+Card C: Thought Break (1-minute cognitive tool)
+Prompt: “What do you actually need right now?”
+Options (tap):
+Rest
+Connection
+Achievement
+Comfort
+Relief
+Based on selection, show one short suggestion.
+Stage 4 — Success + Reward (premium “win” screen)
+Trigger when:
+breathing completed AND (2 actions done OR timer finished) Show:
+✅ “Urge resisted”
+“You just weakened the habit loop.”
+Reward:
++1 orb
+increment “Urges resisted”
+CTA buttons:
+“Back to Home”
+“Log a quick check-in” (optional jump to /checkin)
+3) Logging + Personalization (localStorage)
+Create panic_v1 storage:
+urgeEvents[]:
+{id, dateISO, timeISO, urgeLevel, triggers[], completedBreathing, delaySeconds, actionsDone[], needSelected, outcome("resisted"|"partial"), notes?}
+panicStats:
+{urgesResisted, lastUrgeAtISO, bestDayCount, totalBreathingSessions}
+Persist everything.
+4) Integrate with streak + seed growth
+If user completes a Panic session successfully:
++1 orb
+increment urgesResisted
+optional: give seed progress bonus (tiny)
+Add Home mini cards:
+“Urges resisted: X”
+“Last rescue: Today / Yesterday”
+“Best day: Y urges resisted”
+5) Premium UI requirements
+Background: dark starfield/space gradient
+Glass cards with blur + glow outline
+Gradient pill primary buttons
+Progress dots/stepper
+Animated breathing circle
+Micro feedback when:
+action completed
+stage advances
+success screen appears
+Typography: big headline + short subcopy like your screenshots
+6) Safety / compliance
+No explicit content
+Use neutral terms (“urges”, “habit”, “explicit content”)
+Footer: “Support tool. Informational only, not medical advice.”
+7) Done criteria
+The Panic flow works end-to-end
+Timers work reliably
+Actions checklist works
+Success triggers correctly
+Logs persist after refresh
+Home stats update correctly
+UI looks premium and consistent
