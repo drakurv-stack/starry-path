@@ -300,6 +300,12 @@ export default function CoachPage() {
           </div>
 
           <footer className="text-center px-4">
+            <button 
+              onClick={() => navigate("/panic")}
+              className="mb-4 text-[10px] font-bold text-rose-400 uppercase tracking-widest flex items-center justify-center gap-2 mx-auto hover:text-rose-300 transition"
+            >
+              <ShieldAlert className="h-3 w-3" /> Open Panic Button
+            </button>
             <p className="text-[10px] text-white/30 leading-tight">
               Orbit Coach is an AI-powered support tool. It does not provide medical advice. If you are in crisis, please contact local emergency services.
             </p>

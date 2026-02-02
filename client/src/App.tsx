@@ -14,6 +14,7 @@ import LearnLibrary from "@/pages/learn/index";
 import LessonDetail from "@/pages/learn/lesson";
 import CommunityPage from "@/pages/community/index";
 import DailyCheckin from "@/pages/daily/index";
+import PanicButton from "@/pages/panic/index";
 
 function Router() {
   return (
@@ -29,6 +30,7 @@ function Router() {
       <Route path="/learn/:lessonId" component={LessonDetail} />
       <Route path="/community" component={CommunityPage} />
       <Route path="/daily" component={DailyCheckin} />
+      <Route path="/panic" component={PanicButton} />
 
       <Route component={NotFound} />
     </Switch>

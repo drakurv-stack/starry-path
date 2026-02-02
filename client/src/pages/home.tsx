@@ -72,12 +72,19 @@ export default function Home() {
   const [freeSince, setFreeSince] = useState<string | null>(null);
   const [lastDone, setLastDone] = useState<string | null>(null);
   const [nextLesson, setNextLesson] = useState("Dopamine & the Habit Loop");
+  const [panicStats, setPanicStats] = useState({ urgesResisted: 0 });
 
   useEffect(() => {
     const s = safeNumber(localStorage.getItem(STREAK_KEY), 0);
     const o = safeNumber(localStorage.getItem(ORBS_KEY), 0);
     const fs = localStorage.getItem(FREE_SINCE_KEY);
     const ld = localStorage.getItem(LAST_DONE_KEY);
+
+    // Panic stats
+    try {
+      const raw = localStorage.getItem("orbit:panic_v1");
+      if (raw) setPanicStats(JSON.parse(raw).stats);
+    } catch (e) {}
 
     // Learn progress check for home card
     try {
@@ -278,20 +285,30 @@ export default function Home() {
 
                 <button
                   type="button"
-                  className="w-full rounded-full border border-white/10 bg-white/5 px-5 py-4 text-[15px] font-semibold text-white/90 transition hover:bg-white/10 active:scale-[0.99]"
-                  onClick={() =>
-                    alert(
-                      "Panic Button UI only (prototype).\n\nTry: 4 slow breaths, look around, name 5 things you see, then choose one small next step.",
-                    )
-                  }
+                  className="w-full group relative rounded-full border border-rose-500/30 bg-rose-500/10 px-5 py-4 text-[15px] font-black text-rose-400 transition hover:bg-rose-500/20 active:scale-[0.99] overflow-hidden"
+                  onClick={() => navigate("/panic")}
                   data-testid="button-panic"
                 >
-                  <span className="inline-flex items-center justify-center gap-2">
-                    <ShieldAlert className="h-5 w-5" />
+                  <div className="absolute inset-0 bg-rose-500/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <span className="relative inline-flex items-center justify-center gap-2">
+                    <ShieldAlert className="h-5 w-5 text-rose-500" />
                     Panic Button
                   </span>
                 </button>
               </div>
+
+              {panicStats.urgesResisted > 0 && (
+                <div className="mt-5 flex items-center justify-between px-2 text-[11px] font-bold uppercase tracking-widest text-white/30">
+                  <div className="flex items-center gap-1.5">
+                    <Activity className="h-3 w-3 text-rose-500/50" />
+                    Urges Resisted: <span className="text-white/60">{panicStats.urgesResisted}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="h-3 w-3" />
+                    Last Rescue: Today
+                  </div>
+                </div>
+              )}
 
               <div
                 className="mt-5 rounded-3xl border border-white/10 bg-white/5 p-4"
