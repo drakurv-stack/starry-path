@@ -1,0 +1,172 @@
+.Implement a Seed Garden + Growth Timeline experience for this mobile app that feels premium and emotional.
+Must match the reference UI: dark starry gradients, glass cards, glow accents, smooth animations.
+Use AsyncStorage only for persistence. No backend. No explicit content.
+Do NOT ask for Autonomous mode—implement directly.
+1) New Screens / Navigation
+Create:
+A) /garden (Seed Garden)
+A premium “growth” screen showing:
+Current seed stage (Seed / Sprout / Plant / Tree)
+Animated seed visual
+Stage progress bar
+Milestones timeline (7/30/60/90)
+“Garden Atmosphere” background (stars + subtle particles)
+B) /timeline (Growth Timeline)
+A scrollable timeline showing:
+Day 1, Day 3, Day 7, Day 14, Day 30, Day 60, Day 90
+Each milestone has:
+icon / illustration placeholder
+title
+short description
+locked/unlocked state
+Add navigation entry points:
+Home → “Seed” card → /garden
+Profile → “Seed Garden” → /garden
+Inside /garden add button “View Timeline” → /timeline
+2) Data & Persistence (AsyncStorage)
+Use or extend progress_v1:
+Required fields:
+streak.current
+streak.longest
+streak.freeSinceISO
+seed.stage
+seed.stageProgress (0..1)
+seed.totalCleanDays
+If missing, derive:
+totalCleanDays = max(totalCleanDays, streak.longest or calendar clean count)
+Persist:
+last viewed garden time seed.lastViewedAtISO
+3) Visual Design Requirements (Must Look Premium)
+Background
+Full-screen dark gradient: black → deep navy → purple
+Starfield effect:
+subtle dots
+slow parallax as user scrolls (light, not heavy)
+Glass Cards
+Soft blur, rounded corners (16–24)
+Thin border with low-opacity glow
+Shadow / glow around important cards
+Typography
+Big title text: “Your Garden”
+Soft subtitle text: “Growth happens one day at a time.”
+Buttons
+Gradient pill buttons (purple/blue)
+Secondary button: translucent outline
+4) Seed Visual (Animated)
+Create a single seed component that changes by stage:
+Seed stages:
+Seed: small glowing seed orb
+Sprout: seed + tiny leaf
+Plant: bigger plant with 2–3 leaves
+Tree: tall silhouette tree, subtle sparkle
+Use simple vector-style shapes (no images required) using:
+gradient circles + simple leaf shapes
+or placeholder illustrations if already in assets
+Animations (premium):
+Idle animation: gentle breathing scale (1.0 → 1.03 → 1.0) with glow pulse
+Progress animation: when stageProgress increases, animate bar fill smoothly + seed glow intensifies briefly
+Stage upgrade animation:
+seed scales up + soft “burst” sparkle particles
+text toast: “Leveled up → Sprout 🌱”
+subtle vibration/haptic (if supported)
+5) Progress Bar (Stage Progress)
+On Garden screen show:
+Label: “Stage progress”
+A premium progress bar:
+glass track
+gradient fill
+small sparkle traveling along fill (optional)
+Text: “X days to next stage”
+Stage thresholds:
+Seed: 0–6
+Sprout: 7–29
+Plant: 30–89
+Tree: 90+
+Compute:
+daysIntoStage and daysRemaining
+stageProgress = daysIntoStage / stageLength
+6) Milestone Row (7 / 30 / 60 / 90)
+Below progress bar show milestone chips:
+7 days (Sprout)
+30 days (Plant)
+60 days (Strong plant)
+90 days (Tree)
+Each chip:
+unlocked: glowing + check icon
+locked: dim + small lock icon
+Tap a milestone → opens a mini modal explaining:
+“What changes users often report” (careful language: “may”, “often”)
+“Recommended focus for this phase” (action advice)
+7) Seed Garden “Atmosphere” section (makes it feel alive)
+Add a small “atmosphere” strip:
+“Today’s Growth”
+“Streak: X”
+“Urges resisted: Y”
+“Focus: (from daily focus module if exists)”
+This card uses subtle animation when values update.
+8) Growth Timeline Screen (Scrollable, Emotional)
+/timeline shows a vertical timeline:
+Each milestone card contains:
+Title (example):
+Day 1 — “The Start”
+Day 3 — “First Resistance”
+Day 7 — “Momentum”
+Day 14 — “Stability”
+Day 30 — “Rewire Begins”
+Day 60 — “Stronger Identity”
+Day 90 — “New Default”
+Short 1–2 line description
+Locked/unlocked based on streak.current or totalCleanDays
+Progress connector line between milestones
+As you scroll, cards fade-in + slide-up animation
+Unlocked milestones show:
+a glow border + checkmark Locked milestones show:
+dim + “X days left”
+9) Rewards Hook (Optional but premium)
+When user unlocks a milestone:
+show a modal:
+“Milestone unlocked”
+award orbs (+5)
+“Share this win” button (just UI)
+10) Integration with Streak Updates
+When a user completes a clean day:
+update seed stage + progress
+on next open of Garden:
+run “growth animation”
+show toast: “Your seed grew today 🌱”
+Do NOT over-notify; keep it calm and premium.
+11) Done Criteria
+Garden screen renders and looks premium
+Seed stage reflects streak correctly
+Stage progress bar animates smoothly
+Milestones lock/unlock correctly
+Timeline screen scroll animations work
+Data persists after app restart
+No explicit content, store safe
+Enhance the Seed Garden UI with a subtle star-particle background and parallax depth.
+Add tiny, low-opacity star dots that move slower than the foreground when the user scrolls (parallax effect).
+Particles must be very light (performance-safe) and only decorative.
+Add a faint gradient glow behind the seed that reacts slightly to seed growth animations.
+Keep motion calm, slow, and elegant—no fast or distracting effects.
+Result:
+The garden feels alive and deep, like space breathing quietly 🌌
+✨ ADD-ON 2: HAPTICS + MICRO-FEEDBACK (MOBILE MAGIC)
+Paste this next:
+Add subtle haptic feedback for key moments in the Seed Garden (mobile only):
+light haptic when progress bar increases
+medium haptic when a milestone unlocks
+gentle success haptic on stage upgrade
+Also add micro-feedback animations:
+progress bar glow pulse on growth
+milestone card soft glow + scale-in on unlock
+Keep all feedback restrained and premium (no vibration spam).
+Result:
+Users feel progress, not just see it ✨
+🌿 OPTIONAL FINAL TOUCH (VERY ELITE)
+If you want one last emotional layer, paste this:
+Add a “Garden Reflection” card at the bottom of the Garden screen that updates daily with one calm line such as:
+“Growth is invisible until it isn’t.”
+“Consistency beats intensity.”
+“Today mattered.”
+Rotate from a fixed list.
+Fade-in animation only once per day
