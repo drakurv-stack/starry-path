@@ -5,7 +5,8 @@ import {
   communityPosts, type CommunityPost,
   postReplies, type PostReply,
   learnLessons, type LearnLesson,
-  userLessons, type UserLesson
+  userLessons, type UserLesson,
+  coachMessages, type CoachMessage
 } from "@shared/schema";
 
 export interface IStorage {
@@ -32,6 +33,10 @@ export interface IStorage {
   getLessons(): Promise<LearnLesson[]>;
   getUserLessons(userId: number): Promise<UserLesson[]>;
   completeLesson(userId: number, lessonId: number): Promise<void>;
+
+  // Coach
+  getCoachMessages(userId: number): Promise<CoachMessage[]>;
+  addCoachMessage(userId: number, message: Omit<CoachMessage, "id" | "createdAt">): Promise<CoachMessage>;
 }
 
 export class MemStorage implements IStorage {
@@ -42,6 +47,7 @@ export class MemStorage implements IStorage {
   private replies: Map<number, PostReply[]>;
   private lessons: Map<number, LearnLesson>;
   private userLessons: Map<number, UserLesson[]>;
+  private coachMessages: Map<number, CoachMessage>;
   private currentId: number;
 
   constructor() {
@@ -52,6 +58,7 @@ export class MemStorage implements IStorage {
     this.replies = new Map();
     this.lessons = new Map();
     this.userLessons = new Map();
+    this.coachMessages = new Map();
     this.currentId = 1;
     this.seedLessons();
   }
@@ -140,8 +147,17 @@ export class MemStorage implements IStorage {
   async completeLesson(userId: number, lessonId: number): Promise<void> {
     const existing = this.userLessons.get(userId) || [];
     if (!existing.find(ul => ul.lessonId === lessonId)) {
-      this.userLessons.set(userId, [...existing, { id: this.currentId++, userId, lessonId, completed: true }]);
+      this.userLessons.set(userId, [...existing, { id: this.currentId++, userId, lessonId, completed: true } as UserLesson]);
     }
+  }
+
+  async getCoachMessages(userId: number): Promise<CoachMessage[]> {
+    return Array.from(this.coachMessages.values()).filter(m => m.userId === userId);
+  }
+  async addCoachMessage(userId: number, message: Omit<CoachMessage, "id" | "createdAt">): Promise<CoachMessage> {
+    const msg: CoachMessage = { ...message, id: this.currentId++, userId, createdAt: new Date() };
+    this.coachMessages.set(msg.id, msg);
+    return msg;
   }
 }
 

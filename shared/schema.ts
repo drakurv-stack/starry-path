@@ -72,8 +72,17 @@ export const insertStreakSchema = createInsertSchema(streaks).omit({ id: true })
 export const insertCommunityPostSchema = createInsertSchema(communityPosts).omit({ id: true, createdAt: true });
 export const insertPostReplySchema = createInsertSchema(postReplies).omit({ id: true, createdAt: true });
 
-// Types
-export type User = typeof users.$inferSelect;
+export const coachMessages = pgTable("coach_messages", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  role: text("role").notNull(), // 'user' | 'coach'
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  tags: text("tags").array(),
+});
+
+export const insertCoachMessageSchema = createInsertSchema(coachMessages).omit({ id: true, createdAt: true });
+export type CoachMessage = typeof coachMessages.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Checkin = typeof checkins.$inferSelect;
 export type InsertCheckin = z.infer<typeof insertCheckinSchema>;

@@ -80,5 +80,15 @@ export async function registerRoutes(
     res.sendStatus(200);
   });
 
+  app.get("/api/coach/messages", async (req, res) => {
+    const messages = await storage.getCoachMessages(MOCK_USER_ID);
+    res.json(messages);
+  });
+
+  app.post("/api/coach/messages", async (req, res) => {
+    const msg = await storage.addCoachMessage(MOCK_USER_ID, req.body);
+    res.json(msg);
+  });
+
   return httpServer;
 }
