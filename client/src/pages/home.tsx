@@ -315,7 +315,7 @@ export default function Home() {
           >
             <button
               type="button"
-              className="glass rounded-3xl border border-white/10 bg-white/5 p-4 text-left transition hover:bg-white/8"
+              className="glass relative rounded-3xl border border-white/10 bg-white/5 p-4 text-left transition hover:bg-white/8"
               onClick={() => navigate("/coach")}
               data-testid="button-coach"
             >
@@ -334,6 +334,7 @@ export default function Home() {
               >
                 Always by your side.
               </div>
+              <div className="absolute top-4 right-4 h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)] animate-pulse" />
             </button>
 
             <button
