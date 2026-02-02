@@ -56,12 +56,12 @@ function PillButton({
     <button
       type="button"
       onClick={onClick}
-      className="grad-pill shine w-full rounded-full px-5 py-4 text-[15px] font-semibold tracking-tight text-white transition active:scale-[0.99]"
+      className="grad-pill shine w-full rounded-full px-6 py-5 text-base font-bold tracking-tight text-white transition-all btn-press min-tap"
       data-testid={testId}
     >
       <span className="inline-flex items-center justify-center gap-2">
         {label}
-        <ChevronRight className="h-4 w-4 opacity-90" />
+        <ChevronRight className="h-5 w-5 opacity-90" />
       </span>
     </button>
   );
@@ -139,7 +139,7 @@ export default function Welcome() {
             </button>
           </div>
 
-          <Card className="glass glow mt-6 overflow-hidden">
+          <Card className="glass glow mt-6 overflow-hidden fade-up">
             <CardContent className="p-6">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
@@ -189,16 +189,16 @@ export default function Welcome() {
                 <Progress value={progress} data-testid="progress-welcome" />
               </div>
 
-              <div className="mt-6 flex gap-2" data-testid="group-welcome-dots">
+              <div className="mt-6 flex gap-2 justify-center" data-testid="group-welcome-dots">
                 {slides.map((s, i) => (
                   <button
                     key={s.key}
                     type="button"
                     onClick={() => setIndex(i)}
-                    className={`h-2.5 flex-1 rounded-full transition ${
+                    className={`h-2.5 w-8 rounded-full transition-all duration-300 ${
                       i === index
-                        ? "bg-white/70"
-                        : "bg-white/10 hover:bg-white/20"
+                        ? "bg-white/80 shadow-[0_0_12px_rgba(255,255,255,0.4)]"
+                        : "bg-white/15 hover:bg-white/25"
                     }`}
                     data-testid={`button-welcome-dot-${s.key}`}
                     aria-label={`Go to ${s.key}`}
