@@ -71,12 +71,24 @@ export default function Home() {
   const [orbs, setOrbs] = useState(0);
   const [freeSince, setFreeSince] = useState<string | null>(null);
   const [lastDone, setLastDone] = useState<string | null>(null);
+  const [nextLesson, setNextLesson] = useState("Dopamine & the Habit Loop");
 
   useEffect(() => {
     const s = safeNumber(localStorage.getItem(STREAK_KEY), 0);
     const o = safeNumber(localStorage.getItem(ORBS_KEY), 0);
     const fs = localStorage.getItem(FREE_SINCE_KEY);
     const ld = localStorage.getItem(LAST_DONE_KEY);
+
+    // Learn progress check for home card
+    try {
+      const learnRaw = localStorage.getItem("learn_v1");
+      if (learnRaw) {
+        const progress = JSON.parse(learnRaw);
+        if (progress.completed && progress.completed.length > 0) {
+          setNextLesson("Continue your journey");
+        }
+      }
+    } catch (e) {}
 
     if (localStorage.getItem(STREAK_KEY) === null)
       localStorage.setItem(STREAK_KEY, "0");
@@ -363,7 +375,7 @@ export default function Home() {
             <button
               type="button"
               className="glass rounded-3xl border border-white/10 bg-white/5 p-4 text-left transition hover:bg-white/8"
-              onClick={() => alert("Learn modules UI only (prototype).")}
+              onClick={() => navigate("/learn")}
               data-testid="button-learn"
             >
               <div className="grid h-10 w-10 place-items-center rounded-2xl bg-white/5 ring-1 ring-white/10">
@@ -379,7 +391,7 @@ export default function Home() {
                 className="mt-1 text-xs text-white/70"
                 data-testid="text-learn-body"
               >
-                Short lessons & tools.
+                Start with: {nextLesson}
               </div>
             </button>
 

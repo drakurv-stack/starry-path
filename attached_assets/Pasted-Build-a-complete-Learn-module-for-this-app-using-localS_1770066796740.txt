@@ -1,0 +1,92 @@
+Build a complete Learn module for this app using localStorage only (no backend dependency).
+The module must be fully functional, interactive, and visually match the existing dark starry / glass / gradient UI used across the app.
+Do NOT ask for Autonomous mode. Implement directly.
+📍 Screens & Routing
+Create:
+/learn → Learn Library (lesson list + progress)
+/learn/:lessonId → Lesson Detail (content + tool + quiz)
+Add a Learn card/button on Home that navigates to /learn.
+🧠 Data (localStorage)
+Use a single key: learn_v1
+It should store:
+lessons (static content)
+completed lessons
+quiz scores
+tool responses
+Persist progress after refresh.
+📚 Learn Library (/learn)
+UI:
+Header: “Learn”
+Subtitle: Short science-based lessons & tools
+Progress card:
+“X / 10 lessons completed”
+Progress bar
+Lesson cards (glass cards):
+title
+short subtitle
+time (5–8 min)
+status badge: Not started / Completed
+Clicking a card opens the lesson detail
+📖 Lesson Detail (/learn/:lessonId)
+Each lesson must include:
+Sections
+3–5 short sections (2–4 sentences each) explaining the topic in non-explicit, neutral language.
+Try This Now (Tool)
+A practical tool with steps and text inputs (saved locally), for example:
+identify triggers
+write replacement actions
+plan for urges
+Mini Quiz (3 questions)
+multiple choice
+show score after submit
+show short explanation per answer
+save quiz completion & score
+Completion
+Button: “Mark lesson complete”
+Saves completion
+Returns to Learn Library
+Updates progress bar
+Add footer text:
+“Informational only. Not medical advice.”
+🧩 Lesson Content (Create all 10)
+Create these lessons with original text (short, clear, practical):
+Dopamine & the Habit Loop
+Cue → Craving → Response → Reward
+The Novelty Trap
+Why the brain gets hooked on new stimuli
+Urge Surfing
+Riding urges for 2–5 minutes without acting
+The 10-Minute Delay Rule
+Delaying urges to weaken habits
+Environment Design
+Remove cues, add friction, add support
+Replacement Habits
+Healthier responses when urges hit
+Stress & Sleep
+Why urges spike when tired or stressed
+Relapse Recovery Plan
+No shame, learn and reset
+Focus Reset
+Attention recovery and productivity basics
+Relationships & Connection
+Rebuilding real-world connection and confidence
+Rules:
+No sexual or graphic language
+Use terms like habit, urges, explicit content
+Avoid guarantees or medical claims
+🎨 UI Rules
+Dark space/star gradient background
+Glass-style cards
+Gradient pill buttons
+Smooth transitions
+Consistent with rest of app
+🔗 Integration
+Learn progress updates immediately
+Optional: award +2 orbs per completed lesson if orbs exist
+If no lessons completed, Home shows:
+“Start with: Dopamine & the Habit Loop”
+⚠️ Constraints
+No Autonomous mode
+No external APIs
+No backend logic required
+Keep changes contained to Learn feature only
