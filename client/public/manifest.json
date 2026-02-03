@@ -3,11 +3,12 @@
   "short_name": "StarryPath",
   "description": "A premium-feel recovery companion prototype with a gentle onboarding, panic button, progress insights, and gamified streaks.",
   "display": "standalone",
+  "display_override": ["standalone", "browser"],
+  "id": "/",
+  "scope": "/",
   "start_url": "/",
   "background_color": "#030814",
   "theme_color": "#8257ff",
-  "scope": "/",
-  "id": "/",
   "icons": [
     {
       "src": "/favicon.png",
