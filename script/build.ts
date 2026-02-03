@@ -1,6 +1,8 @@
 import { build as esbuild } from "esbuild";
 import { build as viteBuild } from "vite";
-import { rm, readFile } from "fs/promises";
+import { rm, readFile, cp } from "fs/promises";
+import fs from "fs";
+import path from "path";
 
 // server deps to bundle to reduce openat(2) syscalls
 // which helps cold start times
@@ -37,6 +39,20 @@ async function buildAll() {
 
   console.log("building client...");
   await viteBuild();
+
+  // Ensure .well-known (dotfiles) are copied to dist/public for TWA asset links
+  const srcWellKnown = path.resolve(process.cwd(), "client", "public", ".well-known");
+  const dstWellKnown = path.resolve(process.cwd(), "dist", "public", ".well-known");
+  try {
+    if (fs.existsSync(srcWellKnown)) {
+      await cp(srcWellKnown, dstWellKnown, { recursive: true });
+      console.log("copied .well-known to dist/public");
+    } else {
+      console.warn(".well-known directory not found in client/public; skipping copy");
+    }
+  } catch (err) {
+    console.warn("failed to copy .well-known:", err);
+  }
 
   console.log("building server...");
   const pkg = JSON.parse(await readFile("package.json", "utf-8"));

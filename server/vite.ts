@@ -1,4 +1,5 @@
 import { type Express } from "express";
+import express from "express";
 import { createServer as createViteServer, createLogger } from "vite";
 import { type Server } from "http";
 import viteConfig from "../vite.config";
@@ -30,6 +31,10 @@ export async function setupVite(server: Server, app: Express) {
   });
 
   app.use(vite.middlewares);
+
+  // Explicitly serve .well-known assets from client/public/.well-known in dev mode (needed for TWA asset links)
+  const wellKnownDir = path.resolve(import.meta.dirname, "..", "client", "public", ".well-known");
+  app.use("/.well-known", express.static(wellKnownDir, { dotfiles: "allow" }));
 
   app.get(/^(?!\/api).*/, async (req, res, next) => {
     const url = req.originalUrl;

@@ -1,0 +1,51 @@
+{
+  "packageId": "com.starrypath.app",
+  "host": "starry-path-1--donalrv777.replit.app",
+  "name": "Starry Path",
+  "launcherName": "StarryPath",
+  "display": "standalone",
+  "themeColor": "#8257FF",
+  "themeColorDark": "#000000",
+  "navigationColor": "#000000",
+  "navigationColorDark": "#000000",
+  "navigationDividerColor": "#000000",
+  "navigationDividerColorDark": "#000000",
+  "backgroundColor": "#0B0F1A",
+  "enableNotifications": true,
+  "startUrl": "/",
+  "iconUrl": "https://starry-path-1--donalrv777.replit.app/favicon.png",
+  "maskableIconUrl": "https://starry-path-1--donalrv777.replit.app/favicon.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "C:\\Users\\arpit\\Desktop\\stary path\\starry-path\\android-twa\\android.keystore",
+    "alias": "android"
+  },
+  "appVersionName": "2",
+  "appVersionCode": 2,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://starry-path-1--donalrv777.replit.app/manifest.json",
+  "fallbackType": "webview",
+  "features": {
+    "locationDelegation": {
+      "enabled": true
+    }
+  },
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://starry-path-1--donalrv777.replit.app/",
+  "minSdkVersion": 21,
+  "orientation": "portrait",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "protocolHandlers": [],
+  "fileHandlers": [],
+  "launchHandlerClientMode": "",
+  "displayOverride": [],
+  "appVersion": "2"
+}

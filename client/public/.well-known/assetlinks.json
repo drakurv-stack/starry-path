@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.starrypath.app",
+      "sha256_cert_fingerprints": [
+        "B0:93:FD:9B:CD:34:74:E7:0C:B1:61:87:2D:27:4A:6E:48:C4:E2:48:91:38:03:3A:84:9A:A1:57:1C:4D:7F:E1"
+      ]
+    }
+  }
+]
