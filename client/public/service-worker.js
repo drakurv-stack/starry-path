@@ -3,7 +3,8 @@ const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/favicon.png'
+  '/favicon.png',
+  '/service-worker.js'
 ];
 
 self.addEventListener('install', (event) => {
