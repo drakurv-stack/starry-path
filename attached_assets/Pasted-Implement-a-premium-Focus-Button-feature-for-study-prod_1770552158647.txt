@@ -1,0 +1,74 @@
+Implement a premium “Focus Button” feature for study/productivity that mirrors the Panic Button quality and UI.
+Mobile-first, dark starry premium UI, glass cards, gradient buttons, smooth animations.
+Use AsyncStorage/localStorage only (same storage style as the rest of the app).
+Do NOT ask for Autonomous mode.
+1) Access + Placement
+Add a new Home CTA card: “Focus Button” (Study Rescue)
+Route: /focus
+2) Focus Flow (4 stages)
+Use stepper dots + smooth slide transitions.
+Stage A: Quick Capture (5–10 seconds)
+Title: “Caught the distraction. Good.”
+Ask:
+“What distracted you?” chips (multi-select): Social media, YouTube, Chatting, Random browsing, Gaming, Overthinking, Laziness, Notifications
+“How strong is it?” slider 0–10 (distraction pull)
+Primary: “Start Focus Rescue”
+Secondary: “Skip → start timer”
+Stage B: 30–60 sec Reset
+Quick breathing/grounding animation (shorter than Panic)
+Text: “We’re switching mode: distraction → action”
+Button: “Continue”
+Stage C: Focus Sprint (Pomodoro-style)
+Offer sprint presets: 10 / 25 / 45 minutes
+Timer with Start/Pause/Reset
+“Pick your task”:
+Study (default)
+Coding
+Revision
+Reading
+Deep work
+“Anti-distraction micro actions” checklist (choose 2):
+Put phone face down
+Close all tabs
+Open notes/book now
+2-minute desk reset
+Write next 3 steps
+Require: finish timer OR complete 2 actions → success
+Stage D: Win Screen
+“Focus session completed ✅”
+Show:
+minutes focused
+estimated time saved (based on preset)
+distractions resisted +1
+Reward:
++1 orb for 10 min
++2 orbs for 25 min
++3 orbs for 45 min
+Buttons:
+“Start another sprint”
+“Back to Home”
+“Log check-in” (optional)
+3) Tracking & Stats (like urges)
+Create focus_v1 storage:
+focusEvents[]:
+{id, dateISO, startedAtISO, durationMin, taskType, distractionTypes[], pullLevel, actionsDone[], completed:boolean}
+focusStats:
+{distractionsResisted, totalFocusMinutes, bestDayMinutes, lastFocusAtISO}
+On Home show mini stats card:
+“Focus minutes: X”
+“Distractions resisted: Y”
+“Best day: Z min”
+4) Integration
+If Learn exists: recommend a lesson after session (“Focus Reset”)
+If Seed exists: optionally add a small “growth boost” visual when a focus sprint is completed (do not change stage thresholds, only a micro glow/animation).
+Make it work offline.
+5) UI polish
+Make Focus button distinct color accent (still within purple/blue theme)
+Smooth animations for timer and completion
+No clutter, premium spacing
+6) Done criteria
+Focus flow works end-to-end
+Timer works reliably
+Stats persist after restart
+Distractions are counted like urges
+UI matches premium app style
