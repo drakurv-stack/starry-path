@@ -14,7 +14,11 @@ import {
   AlertCircle,
   Dumbbell,
   Brain,
-  Wind
+  Wind,
+  Zap,
+  Lock,
+  BarChart3,
+  X
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,8 +26,16 @@ import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 const FOCUS_STORAGE_KEY = "orbit:focus_v1";
+const FOCUS_PROGRESS_KEY = "orbit:focus_progress_v1";
 const ORBS_KEY = "orbit:orbs";
 
 const DISTRACTION_TYPES = [
@@ -51,9 +63,18 @@ const TASK_CATEGORIES = [
   }
 ];
 
+const FEEDBACK_MILESTONES = [
+  { threshold: 10, message: "You are rewiring your brain." },
+  { threshold: 50, message: "Your focus resistance improved." },
+  { threshold: 100, message: "Discipline forming." }
+];
+
 export default function FocusButton() {
   const [, navigate] = useLocation();
   const [step, setStep] = useState(0); // 0: Capture, 1: Sprint, 2: Win
+  const [lockMode, setLockMode] = useState(false);
+  const [showExitDialog, setShowExitDialog] = useState(false);
+  const [levelUpData, setLevelUpData] = useState<{ show: boolean, level: number }>({ show: false, level: 1 });
   
   // Capture state
   const [distractionPull, setDistractionPull] = useState([5]);
@@ -67,12 +88,19 @@ export default function FocusButton() {
   const [taskCategory, setTaskCategory] = useState("physical");
   const [physicalCountdown, setPhysicalCountdown] = useState<number | null>(null);
 
-  // Stats state
+  // Stats & Progress state
   const [stats, setStats] = useState({ 
     totalFocusMinutes: 0, 
     distractionsResisted: 0,
     tasksCompleted: 0,
     physicalResets: 0
+  });
+
+  const [progress, setProgress] = useState({
+    abilityXP: 0,
+    level: 1,
+    totalDistractionsDefeated: 0,
+    totalFocusMinutes: 0
   });
 
   useEffect(() => {
@@ -89,6 +117,13 @@ export default function FocusButton() {
       } catch (e) {
         console.error("Failed to parse focus stats", e);
       }
+    }
+
+    const progressRaw = localStorage.getItem(FOCUS_PROGRESS_KEY);
+    if (progressRaw) {
+      try {
+        setProgress(JSON.parse(progressRaw));
+      } catch (e) {}
     }
   }, []);
 
@@ -116,7 +151,26 @@ export default function FocusButton() {
     return () => clearInterval(interval);
   }, [physicalCountdown]);
 
-  const handleStartSprint = () => setStep(1);
+  const addXP = (amount: number) => {
+    setProgress(prev => {
+      const newXP = prev.abilityXP + amount;
+      const newLevel = Math.floor(newXP / 50) + 1;
+      const updated = { ...prev, abilityXP: newXP, level: newLevel };
+      
+      if (newLevel > prev.level) {
+        setLevelUpData({ show: true, level: newLevel });
+      }
+      
+      localStorage.setItem(FOCUS_PROGRESS_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const handleStartSprint = () => {
+    setStep(1);
+    setLockMode(true);
+    addXP(1); // XP for logging distraction
+  };
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -135,7 +189,6 @@ export default function FocusButton() {
       setSelectedActions(prev => prev.filter(t => t !== task));
     } else {
       setSelectedActions(prev => [...prev, task]);
-      // Bonus countdown for physical tasks
       if (taskCategory === "physical") {
         setPhysicalCountdown(30);
       }
@@ -173,50 +226,83 @@ export default function FocusButton() {
       data.focusStats.tasksCompleted += selectedActions.length;
       if (taskCategory === "physical" && selectedActions.length > 0) {
         data.focusStats.physicalResets += 1;
+        addXP(2); // +2 XP for physical reset
       }
       data.focusStats.lastFocusAtISO = event.dateISO;
       
       const currentOrbs = Number(localStorage.getItem(ORBS_KEY) || 0);
       const reward = preset >= 45 ? 3 : preset >= 25 ? 2 : 1;
       localStorage.setItem(ORBS_KEY, String(currentOrbs + reward));
+
+      // XP Rules
+      const xpEarned = Math.floor(durationMin / 10);
+      if (xpEarned > 0) addXP(xpEarned);
+
+      // Update progress totals
+      const newProgress = {
+        ...progress,
+        totalDistractionsDefeated: progress.totalDistractionsDefeated + 1,
+        totalFocusMinutes: progress.totalFocusMinutes + durationMin
+      };
+      setProgress(newProgress);
+      localStorage.setItem(FOCUS_PROGRESS_KEY, JSON.stringify(newProgress));
     }
 
     localStorage.setItem(FOCUS_STORAGE_KEY, JSON.stringify(data));
     setStats(data.focusStats);
     setStep(2);
+    setLockMode(false);
   };
 
   const canStartTimer = useMemo(() => {
-    // If pull level > 7, force physical task first
     if (distractionPull[0] > 7) {
       return taskCategory === "physical" && selectedActions.length >= 1;
     }
-    // Otherwise, allow if at least 1 task is done or if pull level is low (< 4)
     if (distractionPull[0] < 4) return true;
     return selectedActions.length >= 1;
   }, [distractionPull, selectedActions, taskCategory]);
 
+  const milestoneMessage = useMemo(() => {
+    const milestone = [...FEEDBACK_MILESTONES].reverse().find(m => progress.totalDistractionsDefeated >= m.threshold);
+    return milestone ? milestone.message : null;
+  }, [progress.totalDistractionsDefeated]);
+
   return (
-    <div className="min-h-dvh app-bg text-foreground flex flex-col relative overflow-hidden">
+    <div className={`min-h-dvh app-bg text-foreground flex flex-col relative overflow-hidden transition-all duration-500 ${lockMode ? 'z-[100]' : ''}`}>
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-10%] right-[-10%] w-64 h-64 bg-purple-500/10 blur-[100px] rounded-full" />
         <div className="absolute bottom-[-10%] left-[-10%] w-64 h-64 bg-blue-500/10 blur-[100px] rounded-full" />
       </div>
 
       <div className="mx-auto w-full max-w-[420px] flex-1 flex flex-col px-4 pt-8 pb-4 relative z-10">
-        <header className="flex items-center justify-between mb-6">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/home")} className="rounded-full">
-            <ChevronLeft className="h-6 w-6" />
-          </Button>
-          <div className="text-center">
-            <div className="text-[10px] font-black tracking-[0.3em] text-purple-400 uppercase mb-1">Focus Rescue</div>
-            <div className="text-sm font-bold text-white flex items-center justify-center gap-2">
-              <Target className="h-4 w-4 text-purple-500" />
-              <span className="tracking-tight">Concentration Mode</span>
+        {!lockMode && (
+          <header className="flex items-center justify-between mb-6">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/home")} className="rounded-full">
+              <ChevronLeft className="h-6 w-6" />
+            </Button>
+            <div className="text-center">
+              <div className="text-[10px] font-black tracking-[0.3em] text-purple-400 uppercase mb-1">Ability Lvl {progress.level}</div>
+              <div className="text-sm font-bold text-white flex items-center justify-center gap-2">
+                <Target className="h-4 w-4 text-purple-500" />
+                <span className="tracking-tight">Concentration Mode</span>
+              </div>
             </div>
-          </div>
-          <div className="w-10" />
-        </header>
+            <Button variant="ghost" size="icon" onClick={() => navigate("/focus-analytics")} className="rounded-full">
+              <BarChart3 className="h-5 w-5 text-white/40" />
+            </Button>
+          </header>
+        )}
+
+        {lockMode && (
+          <header className="flex items-center justify-between mb-6 pt-4">
+            <Badge variant="outline" className="bg-purple-500/10 border-purple-500/20 text-purple-400 gap-1.5 px-3 py-1">
+              <Lock className="h-3 w-3" /> Locked In
+            </Badge>
+            <Button variant="ghost" size="icon" onClick={() => setShowExitDialog(true)} className="rounded-full text-white/20 hover:text-white/40">
+              <X className="h-5 w-5" />
+            </Button>
+          </header>
+        )}
 
         <AnimatePresence mode="wait">
           {step === 0 && (
@@ -289,19 +375,22 @@ export default function FocusButton() {
             >
               <div className="text-center space-y-2">
                 <h2 className="text-2xl font-bold text-white tracking-tight">Focus Sprint</h2>
-                <div className="flex justify-center gap-2">
-                  {[10, 25, 45].map(m => (
-                    <Button
-                      key={m}
-                      variant={preset === m ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setTimerPreset(m)}
-                      className={`rounded-full px-4 ${preset === m ? "bg-purple-600 border-purple-500" : "bg-white/5 border-white/10 text-white/40"}`}
-                    >
-                      {m}m
-                    </Button>
-                  ))}
-                </div>
+                {lockMode && <p className="text-xs text-white/30 font-bold uppercase tracking-[0.2em]">Stay locked in.</p>}
+                {!lockMode && (
+                  <div className="flex justify-center gap-2">
+                    {[10, 25, 45].map(m => (
+                      <Button
+                        key={m}
+                        variant={preset === m ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setTimerPreset(m)}
+                        className={`rounded-full px-4 ${preset === m ? "bg-purple-600 border-purple-500" : "bg-white/5 border-white/10 text-white/40"}`}
+                      >
+                        {m}m
+                      </Button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <Card className="glass bg-white/5 border-white/10 p-5 rounded-3xl">
@@ -416,6 +505,15 @@ export default function FocusButton() {
               <div className="space-y-2">
                 <h1 className="text-3xl font-bold text-white tracking-tight">Focus Achieved</h1>
                 <p className="text-white/50 text-sm">Your discipline recovery session is logged.</p>
+                {milestoneMessage && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-4 p-4 rounded-2xl bg-white/5 border border-white/10 text-sm font-bold text-purple-400"
+                  >
+                    {milestoneMessage}
+                  </motion.div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4 w-full">
@@ -424,8 +522,8 @@ export default function FocusButton() {
                   <div className="text-2xl font-bold text-white">{stats.totalFocusMinutes}</div>
                 </div>
                 <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-                  <div className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-1">Tasks Done</div>
-                  <div className="text-2xl font-bold text-white">{stats.tasksCompleted}</div>
+                  <div className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-1">XP Gained</div>
+                  <div className="text-2xl font-bold text-white">+{Math.floor(stats.totalFocusMinutes / 10) || 1}</div>
                 </div>
                 <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
                   <div className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-1">Physical Resets</div>
@@ -448,7 +546,46 @@ export default function FocusButton() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        <Dialog open={showExitDialog} onOpenChange={setShowExitDialog}>
+          <DialogContent className="glass bg-slate-900/90 border-white/10 rounded-3xl max-w-[320px]">
+            <DialogHeader>
+              <DialogTitle className="text-white text-center">Break Focus?</DialogTitle>
+              <DialogDescription className="text-white/50 text-center">
+                Your current momentum will be lost. Are you sure?
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col gap-3 mt-4">
+              <Button variant="ghost" onClick={() => setShowExitDialog(false)} className="rounded-2xl h-12 text-white">
+                Stay Locked In
+              </Button>
+              <Button variant="destructive" onClick={() => { setLockMode(false); setStep(0); setTimeLeft(preset * 60); setIsActive(false); setShowExitDialog(false); }} className="rounded-2xl h-12 bg-rose-500/20 border border-rose-500/30 text-rose-400 hover:bg-rose-500/30">
+                End Session
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={levelUpData.show} onOpenChange={(open) => setLevelUpData(prev => ({ ...prev, show: open }))}>
+          <DialogContent className="glass bg-slate-900/95 border-purple-500/30 rounded-3xl max-w-[300px] overflow-hidden">
+            <div className="absolute inset-0 bg-purple-500/10 blur-3xl rounded-full" />
+            <div className="relative py-8 flex flex-col items-center text-center space-y-4">
+              <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center shadow-[0_0_30px_rgba(168,85,247,0.4)] animate-bounce">
+                <Zap className="h-10 w-10 text-white fill-white" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-black text-white tracking-tight">Level Up!</h2>
+                <p className="text-purple-400 font-bold uppercase tracking-widest text-[10px]">Focus Ability Increased</p>
+              </div>
+              <div className="text-5xl font-black text-white">Lvl {levelUpData.level}</div>
+              <Button onClick={() => setLevelUpData({ show: false, level: 1 })} className="w-full grad-pill h-12 rounded-xl text-white font-bold mt-4">
+                Continue Growth
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
 }
+

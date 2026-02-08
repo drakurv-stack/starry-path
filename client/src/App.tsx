@@ -16,6 +16,7 @@ import CommunityPage from "@/pages/community/index";
 import DailyCheckin from "@/pages/daily/index";
 import PanicButton from "@/pages/panic/index";
 import FocusButton from "@/pages/focus";
+import FocusAnalytics from "@/pages/focus-analytics";
 import SeedGarden from "@/pages/garden/index";
 import GrowthTimeline from "@/pages/garden/timeline";
 
@@ -35,6 +36,7 @@ function Router() {
       <Route path="/daily" component={DailyCheckin} />
       <Route path="/panic" component={PanicButton} />
       <Route path="/focus" component={FocusButton} />
+      <Route path="/focus-analytics" component={FocusAnalytics} />
       <Route path="/garden" component={SeedGarden} />
       <Route path="/timeline" component={GrowthTimeline} />
 

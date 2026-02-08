@@ -79,6 +79,7 @@ export default function Home() {
   const [nextLesson, setNextLesson] = useState("Dopamine & the Habit Loop");
   const [panicStats, setPanicStats] = useState({ urgesResisted: 0 });
   const [focusStats, setFocusStats] = useState({ distractionsResisted: 0, totalFocusMinutes: 0 });
+  const [focusProgress, setFocusProgress] = useState({ level: 1 });
 
   useEffect(() => {
     const s = safeNumber(localStorage.getItem(STREAK_KEY), 0);
@@ -96,6 +97,12 @@ export default function Home() {
     try {
       const raw = localStorage.getItem("orbit:focus_v1");
       if (raw) setFocusStats(JSON.parse(raw).focusStats);
+      
+      const progressRaw = localStorage.getItem("orbit:focus_progress_v1");
+      if (progressRaw) {
+        const p = JSON.parse(progressRaw);
+        setFocusProgress(p);
+      }
     } catch (e) {}
 
     // Learn progress check for home card
@@ -507,7 +514,7 @@ export default function Home() {
                 className="mt-3 text-sm font-bold text-white tracking-tight"
                 data-testid="text-profile-title"
               >
-                Profile
+                Profile (Lvl {focusProgress.level})
               </div>
               <div
                 className="mt-1 text-xs text-white/60"
