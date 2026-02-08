@@ -276,29 +276,29 @@ export default function FocusButton() {
 
       <div className="mx-auto w-full max-w-[420px] flex-1 flex flex-col px-4 pt-8 pb-4 relative z-10">
         {!lockMode && (
-          <header className="flex items-center justify-between mb-6">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/home")} className="rounded-full">
-              <ChevronLeft className="h-6 w-6" />
+          <header className="flex items-center justify-between mb-8">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/home")} className="rounded-full bg-white/5 hover:bg-white/10 ring-1 ring-white/10 transition-all duration-300">
+              <ChevronLeft className="h-5 w-5 text-white/70" />
             </Button>
             <div className="text-center">
-              <div className="text-[10px] font-black tracking-[0.3em] text-purple-400 uppercase mb-1">Ability Lvl {progress.level}</div>
+              <div className="text-[10px] font-black tracking-[0.4em] text-purple-400/80 uppercase mb-1.5 drop-shadow-[0_0_8px_rgba(168,85,247,0.4)]">Ability Level {progress.level}</div>
               <div className="text-sm font-bold text-white flex items-center justify-center gap-2">
-                <Target className="h-4 w-4 text-purple-500" />
-                <span className="tracking-tight">Concentration Mode</span>
+                <Target className="h-4 w-4 text-purple-500 animate-pulse" />
+                <span className="tracking-tight text-white/90">Deep Focus</span>
               </div>
             </div>
-            <Button variant="ghost" size="icon" onClick={() => navigate("/focus-analytics")} className="rounded-full">
-              <BarChart3 className="h-5 w-5 text-white/40" />
+            <Button variant="ghost" size="icon" onClick={() => navigate("/focus-analytics")} className="rounded-full bg-white/5 hover:bg-white/10 ring-1 ring-white/10 transition-all duration-300">
+              <BarChart3 className="h-4 w-4 text-white/50" />
             </Button>
           </header>
         )}
 
         {lockMode && (
-          <header className="flex items-center justify-between mb-6 pt-4">
-            <Badge variant="outline" className="bg-purple-500/10 border-purple-500/20 text-purple-400 gap-1.5 px-3 py-1">
-              <Lock className="h-3 w-3" /> Locked In
+          <header className="flex items-center justify-between mb-8 pt-4">
+            <Badge variant="outline" className="bg-purple-500/10 border-purple-500/20 text-purple-400 gap-2 px-4 py-1.5 rounded-full shadow-[0_0_15px_rgba(168,85,247,0.15)] ring-1 ring-purple-500/20">
+              <Lock className="h-3 w-3 animate-pulse" /> Locked In
             </Badge>
-            <Button variant="ghost" size="icon" onClick={() => setShowExitDialog(true)} className="rounded-full text-white/20 hover:text-white/40">
+            <Button variant="ghost" size="icon" onClick={() => setShowExitDialog(true)} className="rounded-full text-white/20 hover:text-white/40 hover:bg-white/5 transition-colors">
               <X className="h-5 w-5" />
             </Button>
           </header>
@@ -313,39 +313,45 @@ export default function FocusButton() {
               exit={{ opacity: 0, y: -20 }}
               className="space-y-6 flex-1 flex flex-col"
             >
-              <div className="text-center pt-2">
-                <h1 className="text-3xl font-bold text-white mb-2">Caught it. Good.</h1>
-                <p className="text-sm text-white/50 px-8">Let's label the distraction and switch back to action.</p>
+              <div className="text-center pt-2 space-y-2">
+                <h1 className="text-4xl font-black text-white tracking-tighter drop-shadow-sm">Caught it.</h1>
+                <p className="text-sm text-white/40 font-medium px-8 leading-relaxed">Let's label the pull and reclaim your momentum.</p>
               </div>
 
-              <Card className="glass bg-white/5 border-white/10 p-6 rounded-3xl">
-                <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-4 text-center">Distraction Pull: {distractionPull[0]}/10</p>
-                <Slider
-                  value={distractionPull}
-                  onValueChange={setDistractionPull}
-                  max={10}
-                  step={1}
-                  className="mb-4"
-                />
-                <div className="flex justify-between text-[10px] text-white/20 font-bold">
-                  <span>MILD</span>
-                  <span>INTENSE</span>
+              <Card className="glass glow bg-white/5 border-white/10 p-8 rounded-[2rem] relative overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative">
+                  <div className="flex justify-between items-center mb-6">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30">Intensity</p>
+                    <span className="text-xs font-black text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-md border border-purple-500/20 shadow-[0_0_10px_rgba(168,85,247,0.2)]">{distractionPull[0]}/10</span>
+                  </div>
+                  <Slider
+                    value={distractionPull}
+                    onValueChange={setDistractionPull}
+                    max={10}
+                    step={1}
+                    className="mb-6"
+                  />
+                  <div className="flex justify-between text-[10px] text-white/20 font-black tracking-widest uppercase">
+                    <span>Low Pull</span>
+                    <span>Intense</span>
+                  </div>
                 </div>
               </Card>
 
-              <div className="space-y-4">
-                <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] text-center">What's pulling you away?</p>
-                <div className="flex flex-wrap gap-2 justify-center">
+              <div className="space-y-6">
+                <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] text-center">Identifying the signal</p>
+                <div className="flex flex-wrap gap-2.5 justify-center">
                   {DISTRACTION_TYPES.map(type => (
                     <button
                       key={type}
                       onClick={() => setSelectedDistractions(prev => 
                         prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
                       )}
-                      className={`px-4 py-2 rounded-xl border text-xs font-bold transition-all ${
+                      className={`px-5 py-2.5 rounded-2xl border text-xs font-black transition-all duration-300 active:scale-95 ${
                         selectedDistractions.includes(type)
-                          ? "bg-purple-500 border-purple-400 text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]"
-                          : "bg-white/5 border-white/10 text-white/40 hover:bg-white/10"
+                          ? "bg-purple-600 border-purple-400/50 text-white shadow-[0_8px_25px_rgba(168,85,247,0.4)] ring-1 ring-white/20"
+                          : "bg-white/5 border-white/5 text-white/30 hover:bg-white/10 hover:border-white/10 hover:text-white/60"
                       }`}
                     >
                       {type}
@@ -354,12 +360,12 @@ export default function FocusButton() {
                 </div>
               </div>
 
-              <div className="mt-auto space-y-3 pb-4">
-                <Button onClick={handleStartSprint} className="w-full h-14 rounded-2xl grad-pill text-white font-bold text-base">
-                  Start Focus Rescue
+              <div className="mt-auto space-y-4 pb-4">
+                <Button onClick={handleStartSprint} className="w-full h-16 rounded-[1.5rem] grad-pill shine text-white font-black text-base tracking-tight shadow-[0_15px_30px_rgba(130,87,255,0.3)] border border-white/20 transition-all active:scale-95">
+                  Initiate Focus Rescue
                 </Button>
-                <button onClick={handleStartSprint} className="w-full py-2 text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">
-                  Skip to timer
+                <button onClick={handleStartSprint} className="w-full py-2 text-[9px] font-black text-white/10 uppercase tracking-[0.5em] hover:text-white/30 transition-colors">
+                  Quick Start
                 </button>
               </div>
             </motion.div>
@@ -373,102 +379,127 @@ export default function FocusButton() {
               exit={{ opacity: 0, x: -20 }}
               className="space-y-6 flex-1 flex flex-col overflow-y-auto pr-1 no-scrollbar"
             >
-              <div className="text-center space-y-2">
-                <h2 className="text-2xl font-bold text-white tracking-tight">Focus Sprint</h2>
-                {lockMode && <p className="text-xs text-white/30 font-bold uppercase tracking-[0.2em]">Stay locked in.</p>}
+              <div className="text-center space-y-3">
+                <h2 className="text-3xl font-black text-white tracking-tighter drop-shadow-sm">The Reset</h2>
+                {lockMode && <p className="text-[10px] text-purple-400 font-black uppercase tracking-[0.4em] drop-shadow-[0_0_8px_rgba(168,85,247,0.3)]">Tunnel Vision Active</p>}
                 {!lockMode && (
-                  <div className="flex justify-center gap-2">
+                  <div className="flex justify-center gap-3">
                     {[10, 25, 45].map(m => (
                       <Button
                         key={m}
                         variant={preset === m ? "default" : "outline"}
                         size="sm"
                         onClick={() => setTimerPreset(m)}
-                        className={`rounded-full px-4 ${preset === m ? "bg-purple-600 border-purple-500" : "bg-white/5 border-white/10 text-white/40"}`}
+                        className={`rounded-2xl px-5 h-9 font-black text-[10px] tracking-widest uppercase transition-all duration-300 ${
+                          preset === m 
+                          ? "bg-purple-600 border-purple-400 shadow-[0_8px_20px_rgba(168,85,247,0.3)]" 
+                          : "bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:text-white/70"}`}
                       >
-                        {m}m
+                        {m}min
                       </Button>
                     ))}
                   </div>
                 )}
               </div>
 
-              <Card className="glass bg-white/5 border-white/10 p-5 rounded-3xl">
-                <div className="flex items-center gap-2 mb-4 text-[10px] font-black text-white/30 uppercase tracking-widest">
-                  <Target className="h-3 w-3" /> Break the Distraction
-                </div>
-                
-                <Tabs value={taskCategory} onValueChange={setTaskCategory} className="w-full">
-                  <TabsList className="grid grid-cols-3 bg-white/5 p-1 rounded-2xl mb-4">
-                    {TASK_CATEGORIES.map(cat => (
-                      <TabsTrigger key={cat.id} value={cat.id} className="rounded-xl data-[state=active]:bg-purple-600 data-[state=active]:text-white">
-                        <cat.icon className="h-4 w-4" />
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-                  {TASK_CATEGORIES.map(cat => (
-                    <TabsContent key={cat.id} value={cat.id} className="space-y-3">
-                      {cat.tasks.map(task => (
-                        <button
-                          key={task}
-                          onClick={() => handleTaskToggle(task)}
-                          className={`w-full flex items-center justify-between p-3 rounded-2xl border transition-all active:scale-[0.98] ${
-                            selectedActions.includes(task)
-                              ? "bg-purple-500/20 border-purple-400 text-purple-200 shadow-inner"
-                              : "bg-white/5 border-white/10 text-white/60"
-                          }`}
-                        >
-                          <span className="text-xs font-bold">{task}</span>
-                          {selectedActions.includes(task) ? (
-                            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="pulse-glow">
-                              <CheckCircle2 className="h-4 w-4 text-purple-400" />
-                            </motion.div>
-                          ) : (
-                            <div className="h-4 w-4 rounded-full border border-white/10" />
-                          )}
-                        </button>
+              <Card className="glass glow bg-white/5 border-white/10 p-6 rounded-[2rem] relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 blur-3xl rounded-full" />
+                <div className="relative">
+                  <div className="flex items-center gap-2 mb-6">
+                    <div className="h-6 w-6 rounded-lg bg-purple-500/20 flex items-center justify-center border border-purple-500/30">
+                      <Target className="h-3 w-3 text-purple-400" />
+                    </div>
+                    <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Priming Exercises</span>
+                  </div>
+                  
+                  <Tabs value={taskCategory} onValueChange={setTaskCategory} className="w-full">
+                    <TabsList className="grid grid-cols-3 bg-white/5 p-1 rounded-2xl mb-6 ring-1 ring-white/5">
+                      {TASK_CATEGORIES.map(cat => (
+                        <TabsTrigger key={cat.id} value={cat.id} className="rounded-xl h-10 data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300">
+                          <cat.icon className="h-4 w-4" />
+                        </TabsTrigger>
                       ))}
-                    </TabsContent>
-                  ))}
-                </Tabs>
-                
-                {physicalCountdown !== null && taskCategory === "physical" && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4 p-3 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-center">
-                    <p className="text-[10px] font-black text-purple-400 uppercase tracking-widest">Stay with it</p>
-                    <div className="text-lg font-black text-white">{physicalCountdown}s</div>
-                  </motion.div>
-                )}
+                    </TabsList>
+                    {TASK_CATEGORIES.map(cat => (
+                      <TabsContent key={cat.id} value={cat.id} className="space-y-3 focus:outline-none">
+                        {cat.tasks.map(task => (
+                          <button
+                            key={task}
+                            onClick={() => handleTaskToggle(task)}
+                            className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 active:scale-[0.98] ${
+                              selectedActions.includes(task)
+                                ? "bg-purple-600/10 border-purple-500/40 text-purple-200 shadow-inner ring-1 ring-purple-500/20"
+                                : "bg-white/3 border-white/5 text-white/40 hover:bg-white/8 hover:border-white/10"
+                            }`}
+                          >
+                            <span className="text-xs font-bold tracking-tight">{task}</span>
+                            {selectedActions.includes(task) ? (
+                              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="h-5 w-5 rounded-full bg-purple-500 flex items-center justify-center shadow-[0_0_10px_rgba(168,85,247,0.5)]">
+                                <CheckCircle2 className="h-3 w-3 text-white" />
+                              </motion.div>
+                            ) : (
+                              <div className="h-5 w-5 rounded-full border-2 border-white/10 transition-colors" />
+                            )}
+                          </button>
+                        ))}
+                      </TabsContent>
+                    ))}
+                  </Tabs>
+                  
+                  {physicalCountdown !== null && taskCategory === "physical" && (
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0.9 }} 
+                      animate={{ opacity: 1, scale: 1 }} 
+                      className="mt-6 p-4 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-center shadow-[0_0_30px_rgba(168,85,247,0.1)]"
+                    >
+                      <p className="text-[9px] font-black text-purple-400/70 uppercase tracking-[0.3em] mb-1">Breath Work</p>
+                      <div className="text-2xl font-black text-white tracking-tighter">{physicalCountdown}s</div>
+                    </motion.div>
+                  )}
+                </div>
               </Card>
 
-              <div className="flex flex-col items-center justify-center py-4">
-                <div className="relative w-48 h-48 flex items-center justify-center">
-                  <div className={`absolute inset-0 rounded-full border-4 border-white/5 ${isActive ? 'animate-pulse' : ''}`} />
-                  <div className="text-4xl font-black text-white font-mono tracking-tighter">
-                    {formatTime(timeLeft)}
+              <div className="flex flex-col items-center justify-center py-8">
+                <div className="relative w-56 h-56 flex items-center justify-center">
+                  <div className={`absolute inset-0 rounded-full border border-white/5 transition-all duration-700 ${isActive ? 'scale-110 opacity-0' : 'scale-100 opacity-100'}`} />
+                  <div className={`absolute inset-4 rounded-full border border-purple-500/20 transition-all duration-1000 ${isActive ? 'breathe-ring' : ''}`} />
+                  <div className="relative flex flex-col items-center">
+                    <div className="text-5xl font-black text-white font-mono tracking-tighter drop-shadow-[0_0_20px_rgba(255,255,255,0.15)]">
+                      {formatTime(timeLeft)}
+                    </div>
+                    <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] mt-2">Remaining</div>
                   </div>
                 </div>
-                <div className="flex gap-4 mt-6">
+                <div className="flex gap-6 mt-8">
                   <Button
                     size="lg"
                     disabled={!canStartTimer}
-                    className={`rounded-full w-14 h-14 p-0 transition-all ${canStartTimer ? 'bg-white/10 hover:bg-white/20 border-white/10 text-white' : 'bg-white/5 text-white/10 opacity-50'}`}
+                    className={`rounded-full w-16 h-16 p-0 transition-all duration-500 shadow-xl ring-1 ${
+                      canStartTimer 
+                      ? 'bg-white/10 hover:bg-white/15 border-white/10 text-white ring-white/10' 
+                      : 'bg-white/3 border-white/5 text-white/5 ring-transparent opacity-40'
+                    }`}
                     onClick={() => setIsActive(!isActive)}
                   >
-                    {isActive ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6 ml-1" />}
+                    {isActive ? <Pause className="h-7 w-7" /> : <Play className="h-7 w-7 ml-1 fill-white" />}
                   </Button>
                   <Button
                     size="lg"
                     variant="ghost"
-                    className="rounded-full w-14 h-14 p-0 text-white/30"
+                    className="rounded-full w-16 h-16 p-0 text-white/20 hover:text-white/40 hover:bg-white/5 transition-all duration-300"
                     onClick={() => { setTimeLeft(preset * 60); setIsActive(false); }}
                   >
                     <RotateCcw className="h-6 w-6" />
                   </Button>
                 </div>
                 {!canStartTimer && (
-                  <p className="mt-4 text-[10px] text-rose-400 font-black uppercase tracking-widest text-center px-4">
-                    {distractionPull[0] > 7 ? "Physical reset required to unlock timer" : "Complete 1 task to unlock timer"}
-                  </p>
+                  <motion.p 
+                    initial={{ opacity: 0 }} 
+                    animate={{ opacity: 1 }}
+                    className="mt-6 text-[10px] text-rose-400/80 font-black uppercase tracking-[0.2em] text-center px-8 leading-relaxed"
+                  >
+                    {distractionPull[0] > 7 ? "Physical reset mandatory to break intense signal" : "Unlock focus by choosing 1 priming action"}
+                  </motion.p>
                 )}
               </div>
 
@@ -476,13 +507,13 @@ export default function FocusButton() {
                 <Button
                   disabled={timeLeft > 0 && selectedActions.length < 1}
                   onClick={handleComplete}
-                  className={`w-full h-14 rounded-2xl font-bold text-base transition-all ${
+                  className={`w-full h-16 rounded-[1.5rem] font-black text-base tracking-tight transition-all duration-500 active:scale-95 ${
                     timeLeft === 0 || selectedActions.length >= 1 
-                      ? "grad-pill text-white shadow-lg" 
-                      : "bg-white/5 text-white/20 border-white/10"
+                      ? "grad-pill shine text-white shadow-[0_15px_30px_rgba(130,87,255,0.3)] border border-white/20" 
+                      : "bg-white/5 text-white/10 border-white/5 opacity-50 cursor-not-allowed"
                   }`}
                 >
-                  Complete Session
+                  Finalize Session
                 </Button>
               </div>
             </motion.div>
@@ -495,52 +526,57 @@ export default function FocusButton() {
               animate={{ opacity: 1, scale: 1 }}
               className="flex-1 flex flex-col items-center justify-center text-center space-y-8"
             >
-              <div className="relative">
-                <div className="absolute inset-0 bg-purple-500/20 blur-3xl rounded-full" />
-                <div className="relative h-24 w-24 rounded-3xl bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center shadow-2xl">
-                  <Trophy className="h-12 w-12 text-white" />
+              <div className="relative mb-4">
+                <div className="absolute inset-0 bg-purple-500/30 blur-3xl rounded-full animate-pulse" />
+                <div className="relative h-28 w-28 rounded-[2.5rem] bg-gradient-to-br from-purple-500 to-indigo-700 flex items-center justify-center shadow-[0_15px_40px_rgba(130,87,255,0.4)] border border-white/20">
+                  <Trophy className="h-12 w-12 text-white drop-shadow-[0_4px_10px_rgba(0,0,0,0.3)]" />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <h1 className="text-3xl font-bold text-white tracking-tight">Focus Achieved</h1>
-                <p className="text-white/50 text-sm">Your discipline recovery session is logged.</p>
+              <div className="space-y-3">
+                <h1 className="text-4xl font-black text-white tracking-tighter">Ascension</h1>
+                <p className="text-white/40 text-sm font-medium px-12">Your neuroplasticity is hard at work. Session archived.</p>
                 {milestoneMessage && (
                   <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mt-4 p-4 rounded-2xl bg-white/5 border border-white/10 text-sm font-bold text-purple-400"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="mt-6 p-5 rounded-[2rem] glass bg-purple-500/10 border-purple-500/30 text-xs font-black text-purple-200 uppercase tracking-widest shadow-[0_10px_30px_rgba(168,85,247,0.1)]"
                   >
+                    <Zap className="h-4 w-4 inline-block mr-2 mb-1 text-purple-400" />
                     {milestoneMessage}
                   </motion.div>
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4 w-full">
-                <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-                  <div className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-1">Focus Minutes</div>
-                  <div className="text-2xl font-bold text-white">{stats.totalFocusMinutes}</div>
+              <div className="grid grid-cols-2 gap-4 w-full px-2">
+                <div className="p-5 rounded-[2rem] glass bg-white/5 border-white/10 group transition-all duration-300 hover:bg-white/10">
+                  <div className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em] mb-2 group-hover:text-purple-400/50 transition-colors">Depth Time</div>
+                  <div className="text-3xl font-black text-white tracking-tighter group-hover:scale-105 transition-transform origin-left">{stats.totalFocusMinutes}</div>
+                  <span className="text-[10px] text-white/20 font-bold ml-1">min</span>
                 </div>
-                <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-                  <div className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-1">XP Gained</div>
-                  <div className="text-2xl font-bold text-white">+{Math.floor(stats.totalFocusMinutes / 10) || 1}</div>
+                <div className="p-5 rounded-[2rem] glass bg-white/5 border-white/10 group transition-all duration-300 hover:bg-white/10">
+                  <div className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em] mb-2 group-hover:text-blue-400/50 transition-colors">Focus XP</div>
+                  <div className="text-3xl font-black text-blue-400 tracking-tighter group-hover:scale-105 transition-transform origin-left">+{Math.floor(stats.totalFocusMinutes / 10) || 1}</div>
+                  <span className="text-[10px] text-blue-400/30 font-bold ml-1">PTS</span>
                 </div>
-                <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-                  <div className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-1">Physical Resets</div>
-                  <div className="text-2xl font-bold text-white">{stats.physicalResets}</div>
+                <div className="p-5 rounded-[2rem] glass bg-white/5 border-white/10 group transition-all duration-300 hover:bg-white/10">
+                  <div className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em] mb-2 group-hover:text-amber-400/50 transition-colors">System Resets</div>
+                  <div className="text-3xl font-black text-white tracking-tighter group-hover:scale-105 transition-transform origin-left">{stats.physicalResets}</div>
+                  <span className="text-[10px] text-white/20 font-bold ml-1">x</span>
                 </div>
-                <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-                  <div className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-1">Resisted</div>
-                  <div className="text-2xl font-bold text-white">{stats.distractionsResisted}</div>
+                <div className="p-5 rounded-[2rem] glass bg-white/5 border-white/10 group transition-all duration-300 hover:bg-white/10">
+                  <div className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em] mb-2 group-hover:text-rose-400/50 transition-colors">Signal Resisted</div>
+                  <div className="text-3xl font-black text-white tracking-tighter group-hover:scale-105 transition-transform origin-left">{stats.distractionsResisted}</div>
+                  <span className="text-[10px] text-white/20 font-bold ml-1">x</span>
                 </div>
               </div>
 
-              <div className="w-full space-y-3 pt-4">
-                <Button onClick={() => { setStep(0); setTimeLeft(preset * 60); setIsActive(false); setSelectedActions([]); }} className="w-full h-14 rounded-2xl grad-pill text-white font-bold">
-                  Start Another Sprint
+              <div className="w-full space-y-4 pt-6 px-2">
+                <Button onClick={() => { setStep(0); setTimeLeft(preset * 60); setIsActive(false); setSelectedActions([]); }} className="w-full h-16 rounded-[1.5rem] grad-pill shine text-white font-black text-base tracking-tight transition-all active:scale-95">
+                  Begin Next Protocol
                 </Button>
-                <Button variant="ghost" onClick={() => navigate("/home")} className="w-full h-14 rounded-2xl text-white/50 font-bold">
-                  Back to Home
+                <Button variant="ghost" onClick={() => navigate("/home")} className="w-full h-14 rounded-2xl text-white/30 font-bold hover:text-white/60 hover:bg-white/5 transition-all">
+                  Return to Orbit
                 </Button>
               </div>
             </motion.div>
