@@ -77,6 +77,7 @@ export default function Home() {
   const [lastDone, setLastDone] = useState<string | null>(null);
   const [nextLesson, setNextLesson] = useState("Dopamine & the Habit Loop");
   const [panicStats, setPanicStats] = useState({ urgesResisted: 0 });
+  const [focusStats, setFocusStats] = useState({ distractionsResisted: 0, totalFocusMinutes: 0 });
 
   useEffect(() => {
     const s = safeNumber(localStorage.getItem(STREAK_KEY), 0);
@@ -88,6 +89,12 @@ export default function Home() {
     try {
       const raw = localStorage.getItem("orbit:panic_v1");
       if (raw) setPanicStats(JSON.parse(raw).stats);
+    } catch (e) {}
+
+    // Focus stats
+    try {
+      const raw = localStorage.getItem("orbit:focus_v1");
+      if (raw) setFocusStats(JSON.parse(raw).focusStats);
     } catch (e) {}
 
     // Learn progress check for home card
@@ -299,18 +306,47 @@ export default function Home() {
                     Panic Button
                   </span>
                 </button>
+
+                <button
+                  type="button"
+                  className="w-full group relative rounded-full border border-purple-500/30 bg-purple-500/10 px-6 py-5 text-base font-black text-purple-400 transition-all hover:bg-purple-500/15 hover:border-purple-500/40 btn-press min-tap overflow-hidden"
+                  onClick={() => navigate("/focus")}
+                  data-testid="button-focus"
+                >
+                  <div className="absolute inset-0 bg-purple-500/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <span className="relative inline-flex items-center justify-center gap-2">
+                    <Target className="h-5 w-5 text-purple-500" />
+                    Focus Button
+                  </span>
+                </button>
               </div>
 
-              {panicStats.urgesResisted > 0 && (
-                <div className="mt-5 flex items-center justify-between px-2 text-[11px] font-bold uppercase tracking-widest text-white/30">
-                  <div className="flex items-center gap-1.5">
-                    <Activity className="h-3 w-3 text-rose-500/50" />
-                    Urges Resisted: <span className="text-white/60">{panicStats.urgesResisted}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Clock className="h-3 w-3" />
-                    Last Rescue: Today
-                  </div>
+              {(panicStats.urgesResisted > 0 || focusStats.totalFocusMinutes > 0) && (
+                <div className="mt-5 space-y-2">
+                  {panicStats.urgesResisted > 0 && (
+                    <div className="flex items-center justify-between px-2 text-[11px] font-bold uppercase tracking-widest text-white/30">
+                      <div className="flex items-center gap-1.5">
+                        <Activity className="h-3 w-3 text-rose-500/50" />
+                        Urges Resisted: <span className="text-white/60">{panicStats.urgesResisted}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Clock className="h-3 w-3" />
+                        Last Rescue: Today
+                      </div>
+                    </div>
+                  )}
+                  {focusStats.totalFocusMinutes > 0 && (
+                    <div className="flex items-center justify-between px-2 text-[11px] font-bold uppercase tracking-widest text-white/30">
+                      <div className="flex items-center gap-1.5">
+                        <Target className="h-3 w-3 text-purple-500/50" />
+                        Focus Time: <span className="text-white/60">{focusStats.totalFocusMinutes} min</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <TrendingUp className="h-3 w-3 text-purple-500/50" />
+                        Resisted: <span className="text-white/60">{focusStats.distractionsResisted}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
