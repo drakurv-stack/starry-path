@@ -1,0 +1,76 @@
+Do NOT ask for Autonomous mode.
+Implement Focus Growth Milestones inside the existing Focus Mode UI, using the same premium style as the Seed growth system (dark cosmic, glass, glow, smooth animations).
+Do not change unrelated modules. No backend. Offline only.
+1) Create a “Focus Growth” system (like Seed)
+Add focus_growth_v1 in AsyncStorage/localStorage:
+xpTotal: number
+level: number
+stage: "spark" | "ember" | "flame" | "laser" | "zen" | "master"
+stageProgress: number (0..1)
+milestonesUnlocked: string[]
+weeklyFocusMinutes: { [weekKey]: number }
+weeklyDistractionsDefeated: { [weekKey]: number }
+XP rules (simple, predictable):
++1 XP per distraction defeated (instant “I got distracted” log)
++1 XP per 10 minutes of completed focus timer
++2 XP if user completes a Physical Reset task
+Level thresholds:
+Every 50 XP → Level up
+Stage mapping by level:
+Level 1–1: spark
+2–3: ember
+4–6: flame
+7–10: laser
+11–15: zen
+16+: master
+Compute stageProgress inside each stage as levels progress.
+2) Add “Milestone Row” inside Focus Mode (like Seed)
+Inside Focus Mode screen show a premium milestone row under the timer:
+Milestones:
+10 distractions defeated → “First Control”
+50 distractions defeated → “Resistance Up”
+100 distractions defeated → “Focus Identity”
+250 distractions defeated → “Deep Work”
+500 distractions defeated → “Mastery”
+Each milestone shows:
+locked state (dim, lock icon)
+unlocked state (glow, check icon)
+tap → opens a glass modal with:
+what it means (short)
+“Next target: X left”
+3) Add a “Focus Aura” progress ring (seed-like)
+Around the timer add a ring that visualizes growth:
+Outer ring = stageProgress
+Inner subtle pulse = running timer
+When XP increases:
+ring fills slightly with smooth ease
+glow pulses
+micro text appears: “Focus ability improved”
+4) Premium Level-Up animation (same vibe as Seed)
+When a milestone unlocks OR level increases:
+show minimal modal:
+“Focus Ability Increased”
+“Stage: Ember” (or next stage)
++XP gained
+subtle sparkle particles (very light)
+optional haptic (light)
+No confetti, no childish effects.
+5) Coach-like micro messages during focus (ties it together)
+Add rotating short messages every 25–45 seconds:
+“Resistance is training.”
+“Distraction loses when you stay.”
+“You’re building focus identity.”
+“One session = more control.”
+If user is near a milestone (e.g., within 5):
+message: “5 away from Resistance Up.”
+6) Weekly “Growth Summary” (mini)
+At end of a focus session success screen show:
+“This week: +X focus minutes”
+“This week: +Y distractions defeated”
+“Growth: +Z XP”
+7) Constraints / Done Criteria
+Must work offline
+Must persist after restart
+Must not require new heavy libraries
+Must not change other modules
+Focus Mode now shows milestones, stage, ring animation, and level-up feedback similar to Seed
