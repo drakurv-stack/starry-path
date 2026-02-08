@@ -361,7 +361,7 @@ export default function FocusButton() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="space-y-6 flex-1 flex flex-col overflow-y-auto pr-1 no-scrollbar"
+              className="space-y-4 flex-1 flex flex-col overflow-y-auto pr-1 no-scrollbar"
             >
               <div className="text-center space-y-3">
                 <div className="text-[10px] text-purple-400 font-black uppercase tracking-[0.4em] mb-1 animate-pulse h-4">{coachMessage}</div>
@@ -385,104 +385,104 @@ export default function FocusButton() {
                 )}
               </div>
 
-              <div className="flex flex-col items-center justify-center py-4">
-                <div className="relative w-64 h-64 flex items-center justify-center">
-                  <svg className="absolute inset-0 w-full h-full -rotate-90 overflow-visible">
-                    <circle
-                      cx="128"
-                      cy="128"
-                      r="120"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="text-white/5"
-                    />
-                    <motion.circle
-                      cx="128"
-                      cy="128"
-                      r="120"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                      strokeDasharray="753.98"
-                      initial={{ strokeDashoffset: 753.98 }}
-                      animate={{ strokeDashoffset: 753.98 * (1 - growth.stageProgress) }}
-                      transition={{ duration: 1.5, ease: "easeOut" }}
-                      className="text-purple-500/40 drop-shadow-[0_0_10px_rgba(168,85,247,0.5)]"
-                    />
-                    <motion.circle
-                      cx="128"
-                      cy="128"
-                      r="110"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1"
-                      animate={{ 
-                        scale: isActive ? [1, 1.05, 1] : 1,
-                        opacity: isActive ? [0.2, 0.5, 0.2] : 0.2
-                      }}
-                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                      className="text-blue-400"
-                    />
-                  </svg>
-                  
-                  <div className="relative flex flex-col items-center">
-                    <div className="text-6xl font-black text-white font-mono tracking-tighter drop-shadow-[0_0_20px_rgba(255,255,255,0.15)]">
-                      {formatTime(timeLeft)}
+            <div className="flex flex-col items-center justify-center py-2">
+                <div className="relative w-48 h-48 flex items-center justify-center">
+                    <svg className="absolute inset-0 w-full h-full -rotate-90 overflow-visible">
+                        <circle
+                            cx="96"
+                            cy="96"
+                            r="90"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            className="text-white/5"
+                        />
+                        <motion.circle
+                            cx="96"
+                            cy="96"
+                            r="90"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            strokeDasharray="565.48"
+                            initial={{ strokeDashoffset: 565.48 }}
+                            animate={{ strokeDashoffset: 565.48 * (1 - growth.stageProgress) }}
+                            transition={{ duration: 1.5, ease: "easeOut" }}
+                            className="text-purple-500/40 drop-shadow-[0_0_10px_rgba(168,85,247,0.5)]"
+                        />
+                        <motion.circle
+                            cx="96"
+                            cy="96"
+                            r="80"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1"
+                            animate={{ 
+                                scale: isActive ? [1, 1.05, 1] : 1,
+                                opacity: isActive ? [0.2, 0.5, 0.2] : 0.2
+                            }}
+                            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                            className="text-blue-400"
+                        />
+                    </svg>
+                    
+                    <div className="relative flex flex-col items-center">
+                        <div className="text-5xl font-black text-white font-mono tracking-tighter drop-shadow-[0_0_20px_rgba(255,255,255,0.15)]">
+                            {formatTime(timeLeft)}
+                        </div>
+                        <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] mt-1">Remaining</div>
+                        {isActive && (
+                            <motion.div 
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="absolute -bottom-6 whitespace-nowrap text-[8px] font-black text-purple-400 uppercase tracking-widest"
+                            >
+                                Focus ability improved
+                            </motion.div>
+                        )}
                     </div>
-                    <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] mt-2">Remaining</div>
-                    {isActive && (
-                      <motion.div 
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="absolute -bottom-8 whitespace-nowrap text-[8px] font-black text-purple-400 uppercase tracking-widest"
-                      >
-                        Focus ability improved
-                      </motion.div>
-                    )}
-                  </div>
                 </div>
 
-                <div className="flex gap-6 mt-8">
-                  <Button
-                    size="lg"
-                    disabled={!canStartTimer}
-                    className={`rounded-full w-16 h-16 p-0 transition-all duration-500 shadow-xl ring-1 ${
-                      canStartTimer 
-                      ? 'bg-white/10 hover:bg-white/15 border-white/10 text-white ring-white/10' 
-                      : 'bg-white/3 border-white/5 text-white/5 ring-transparent opacity-40'
-                    }`}
-                    onClick={() => setIsActive(!isActive)}
-                  >
-                    {isActive ? <Pause className="h-7 w-7" /> : <Play className="h-7 w-7 ml-1 fill-white" />}
-                  </Button>
-                  <Button
-                    size="lg"
-                    variant="ghost"
-                    className="rounded-full w-16 h-16 p-0 text-white/20 hover:text-white/40 hover:bg-white/5 transition-all duration-300"
-                    onClick={() => { setTimeLeft(preset * 60); setIsActive(false); }}
-                  >
-                    <RotateCcw className="h-6 w-6" />
-                  </Button>
+                <div className="flex gap-4 mt-6">
+                    <Button
+                        size="lg"
+                        disabled={!canStartTimer}
+                        className={`rounded-full w-14 h-14 p-0 transition-all duration-500 shadow-xl ring-1 ${
+                            canStartTimer 
+                            ? 'bg-white/10 hover:bg-white/15 border-white/10 text-white ring-white/10' 
+                            : 'bg-white/3 border-white/5 text-white/5 ring-transparent opacity-40'
+                        }`}
+                        onClick={() => setIsActive(!isActive)}
+                    >
+                        {isActive ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6 ml-1 fill-white" />}
+                    </Button>
+                    <Button
+                        size="lg"
+                        variant="ghost"
+                        className="rounded-full w-14 h-14 p-0 text-white/20 hover:text-white/40 hover:bg-white/5 transition-all duration-300"
+                        onClick={() => { setTimeLeft(preset * 60); setIsActive(false); }}
+                    >
+                        <RotateCcw className="h-5 w-5" />
+                    </Button>
                 </div>
-              </div>
+            </div>
 
-              <Card className="glass glow bg-white/5 border-white/10 p-6 rounded-[2rem] relative overflow-hidden mt-4">
+              <Card className="glass glow bg-white/5 border-white/10 p-5 rounded-[2rem] relative overflow-hidden mt-2">
                 <Tabs value={taskCategory} onValueChange={setTaskCategory} className="w-full">
-                  <TabsList className="grid grid-cols-3 bg-white/5 p-1 rounded-2xl mb-6 ring-1 ring-white/5">
+                  <TabsList className="grid grid-cols-3 bg-white/5 p-1 rounded-2xl mb-4 ring-1 ring-white/5">
                     {TASK_CATEGORIES.map(cat => (
-                      <TabsTrigger key={cat.id} value={cat.id} className="rounded-xl h-10 data-[state=active]:bg-purple-600 data-[state=active]:text-white transition-all duration-300">
+                      <TabsTrigger key={cat.id} value={cat.id} className="rounded-xl h-9 data-[state=active]:bg-purple-600 data-[state=active]:text-white transition-all duration-300">
                         <cat.icon className="h-4 w-4" />
                       </TabsTrigger>
                     ))}
                   </TabsList>
                   {TASK_CATEGORIES.map(cat => (
-                    <TabsContent key={cat.id} value={cat.id} className="space-y-3">
+                    <TabsContent key={cat.id} value={cat.id} className="space-y-2">
                       {cat.tasks.map(task => (
                         <button
                           key={task}
                           onClick={() => handleTaskToggle(task)}
-                          className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 ${
+                          className={`w-full flex items-center justify-between p-3 rounded-2xl border transition-all duration-300 ${
                             selectedActions.includes(task)
                               ? "bg-purple-600/10 border-purple-500/40 text-purple-200"
                               : "bg-white/3 border-white/5 text-white/40"
