@@ -229,7 +229,7 @@ export default function Onboarding() {
         },
         {
           key: "started",
-          title: "When did you start watching porn?",
+          title: "When did this habit first become part of your routine?",
           body: "Pick what feels closest. You can always update later.",
           skip: true,
           render: () => {
