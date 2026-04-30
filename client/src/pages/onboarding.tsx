@@ -318,7 +318,7 @@ export default function Onboarding() {
         },
         {
           key: "money",
-          title: "Have you ever spent money on explicit content?",
+          title: "Has this habit had any financial impact on you?",
           body: "This can help us understand patterns around friction and access.",
           skip: true,
           render: () => {
