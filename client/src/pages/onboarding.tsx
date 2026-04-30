@@ -289,7 +289,7 @@ export default function Onboarding() {
         },
         {
           key: "extreme",
-          title: "Has the content changed over time?",
+          title: "Have you noticed any changes in this habit over time?",
           body: "Some people notice they seek more novelty or intensity. Answer what feels true for you.",
           skip: true,
           render: () => {
