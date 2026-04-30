@@ -235,7 +235,7 @@ export default function Personalize() {
         key: "community",
         icon: Users,
         title: "You are not alone",
-        body: "Many people are rebuilding their relationship with porn. You’re joining a real movement of change.",
+        body: "Many people are rebuilding their relationship with their habits. You’re joining a real movement of change.",
         render: () => (
           <div className="mt-5">
             <StatCard
