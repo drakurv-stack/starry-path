@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import {
   ArrowLeft,
@@ -33,7 +33,7 @@ type Profile = {
   [key: string]: unknown;
 };
 
-type Device = "android" | "ios" | "other";
+type Platform = "windows" | "android";
 
 function readProfile(): Profile {
   try {
@@ -48,36 +48,35 @@ function saveProfile(nextProfile: Profile) {
   localStorage.setItem(PROFILE_KEY, JSON.stringify(nextProfile));
 }
 
-function detectDevice(): Device {
-  const userAgent = navigator.userAgent;
-  if (/Android/i.test(userAgent)) return "android";
-  if (
-    /iPhone|iPad|iPod/i.test(userAgent) ||
-    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
-  ) {
-    return "ios";
-  }
-  return "other";
+function detectPlatform(): Platform {
+  return /Android/i.test(navigator.userAgent) ? "android" : "windows";
 }
 
-function deviceSettingsPath(device: Device) {
-  if (device === "android") {
-    return "Settings → Network & internet → Private DNS";
-  }
-  if (device === "ios") {
-    return "Settings → Wi-Fi → tap ⓘ beside your network → Configure DNS";
-  }
-  return "Open your device settings and look for Private DNS or Configure DNS";
-}
-
-function deviceSettingsLink(device: Device) {
-  if (device === "android") {
-    return "intent:#Intent;action=android.settings.PRIVATE_DNS_SETTINGS;end";
-  }
-  if (device === "ios") {
-    return "App-Prefs:root=WIFI";
-  }
-  return null;
+function CopyableDnsValue({
+  value,
+  copied,
+  onCopy,
+}: {
+  value: string;
+  copied: boolean;
+  onCopy: () => void;
+}) {
+  return (
+    <span className="mt-2 flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
+      <code className="min-w-0 flex-1 break-all text-xs font-semibold text-foreground">
+        {value}
+      </code>
+      <button
+        type="button"
+        className="shrink-0 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground transition hover:bg-secondary"
+        onClick={onCopy}
+        aria-label={`Copy ${value}`}
+        data-testid={`button-copy-${value.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`}
+      >
+        {copied ? "Copied" : "Copy"}
+      </button>
+    </span>
+  );
 }
 
 export default function Settings() {
@@ -86,13 +85,13 @@ export default function Settings() {
   const [profile, setProfile] = useState<Profile>(() => readProfile());
   const [showSetup, setShowSetup] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [device, setDevice] = useState<Device>("other");
+  const [platform, setPlatform] = useState<Platform>("windows");
+  const [copiedValue, setCopiedValue] = useState<string | null>(null);
 
   const dnsProtectionEnabled = profile.dnsProtectionEnabled === true;
-  const settingsPath = useMemo(() => deviceSettingsPath(device), [device]);
 
   useEffect(() => {
-    setDevice(detectDevice());
+    setPlatform(detectPlatform());
   }, []);
 
   useEffect(() => {
@@ -117,12 +116,34 @@ export default function Settings() {
   }
 
   function openDeviceSettings() {
-    sessionStorage.setItem(DNS_PENDING_KEY, "true");
-    const link = deviceSettingsLink(device);
-    if (link) {
-      window.location.assign(link);
+    if (platform === "android") {
+      sessionStorage.setItem(DNS_PENDING_KEY, "true");
+      window.location.assign(
+        "intent:#Intent;action=android.settings.PRIVATE_DNS_SETTINGS;end",
+      );
     }
     setShowSetup(false);
+  }
+
+  async function copyValue(value: string) {
+    try {
+      await navigator.clipboard.writeText(value);
+    } catch {
+      const textarea = document.createElement("textarea");
+      textarea.value = value;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      textarea.remove();
+    }
+
+    setCopiedValue(value);
+    window.setTimeout(() => {
+      setCopiedValue((current) => (current === value ? null : current));
+    }, 1800);
   }
 
   function keepProtectionOff() {
@@ -267,7 +288,7 @@ export default function Settings() {
       <AppNav />
 
       <Dialog open={showSetup} onOpenChange={setShowSetup}>
-        <DialogContent className="w-[calc(100%-2rem)] rounded-[26px] border-border bg-card p-6 sm:max-w-md">
+        <DialogContent className="max-h-[min(90dvh,760px)] w-[calc(100%-2rem)] overflow-y-auto rounded-[26px] border-border bg-card p-6 sm:max-w-lg">
           <DialogHeader className="text-left">
             <div className="mb-2 grid h-11 w-11 place-items-center rounded-2xl bg-secondary text-primary">
               <Smartphone className="h-5 w-5" aria-hidden="true" />
@@ -279,15 +300,126 @@ export default function Settings() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="rounded-2xl border border-border bg-background p-4 text-sm leading-6 text-muted-foreground">
-            <p className="font-semibold text-foreground">On your device, go to:</p>
-            <p className="mt-1">{settingsPath}</p>
-            {device === "other" ? (
-              <p className="mt-2 text-xs">
-                We couldn’t identify your phone, so use the path that matches your device.
-              </p>
-            ) : null}
+          <div
+            className="grid grid-cols-2 gap-1 rounded-xl border border-border bg-background p-1"
+            role="tablist"
+            aria-label="Choose your platform"
+            data-testid="group-platform-picker"
+          >
+            {(["windows", "android"] as const).map((option) => (
+              <button
+                key={option}
+                type="button"
+                role="tab"
+                aria-selected={platform === option}
+                className={`min-h-11 rounded-lg px-4 text-sm font-semibold capitalize transition ${
+                  platform === option
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                onClick={() => {
+                  setPlatform(option);
+                  setCopiedValue(null);
+                }}
+                data-testid={`button-platform-${option}`}
+              >
+                {option}
+              </button>
+            ))}
           </div>
+
+          {platform === "windows" ? (
+            <ol className="grid gap-3 text-sm leading-6 text-muted-foreground" data-testid="list-windows-steps">
+              <li className="flex gap-3">
+                <span className="font-semibold text-foreground">1.</span>
+                <span>Open Settings &gt; Network &amp; Internet</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="font-semibold text-foreground">2.</span>
+                <span>Click Wi-Fi (or Ethernet if wired), then click your connected network</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="font-semibold text-foreground">3.</span>
+                <span>Scroll to DNS server assignment, click Edit</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="font-semibold text-foreground">4.</span>
+                <span>Change from “Automatic (DHCP)” to Manual</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="font-semibold text-foreground">5.</span>
+                <span>Turn on IPv4</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="font-semibold text-foreground">6.</span>
+                <span className="min-w-0 flex-1">
+                  <span>Enter Preferred DNS:</span>
+                  <CopyableDnsValue
+                    value="185.228.168.10"
+                    copied={copiedValue === "185.228.168.10"}
+                    onCopy={() => void copyValue("185.228.168.10")}
+                  />
+                </span>
+              </li>
+              <li className="flex gap-3">
+                <span className="font-semibold text-foreground">7.</span>
+                <span className="min-w-0 flex-1">
+                  <span>Enter Alternate DNS:</span>
+                  <CopyableDnsValue
+                    value="185.228.169.11"
+                    copied={copiedValue === "185.228.169.11"}
+                    onCopy={() => void copyValue("185.228.169.11")}
+                  />
+                </span>
+              </li>
+              <li className="flex gap-3">
+                <span className="font-semibold text-foreground">8.</span>
+                <span>Click Save</span>
+              </li>
+            </ol>
+          ) : (
+            <ol className="grid gap-3 text-sm leading-6 text-muted-foreground" data-testid="list-android-steps">
+              <li className="flex gap-3">
+                <span className="font-semibold text-foreground">1.</span>
+                <span>Open Settings &gt; Network &amp; Internet (or Connections on Samsung)</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="font-semibold text-foreground">2.</span>
+                <span>Tap Private DNS</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="font-semibold text-foreground">3.</span>
+                <span>Select Private DNS provider hostname</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="font-semibold text-foreground">4.</span>
+                <span className="min-w-0 flex-1">
+                  <span>Enter:</span>
+                  <CopyableDnsValue
+                    value="family-filter-dns.cleanbrowsing.org"
+                    copied={copiedValue === "family-filter-dns.cleanbrowsing.org"}
+                    onCopy={() => void copyValue("family-filter-dns.cleanbrowsing.org")}
+                  />
+                </span>
+              </li>
+              <li className="flex gap-3">
+                <span className="font-semibold text-foreground">5.</span>
+                <span>Tap Save</span>
+              </li>
+            </ol>
+          )}
+
+          {platform === "android" ? (
+            <p
+              className="rounded-2xl border border-border bg-background p-4 text-xs leading-5 text-muted-foreground"
+              data-testid="text-android-dns-note"
+            >
+              <span className="font-semibold text-foreground">Note:</span> if your Android version
+              doesn&apos;t support Private DNS hostname mode, use per-network manual DNS instead
+              — tap your Wi-Fi network &gt; pencil/edit icon &gt; Advanced options &gt; DNS =
+              &quot;Static&quot; &gt; enter 185.228.168.10 / 185.228.169.11.
+            </p>
+          ) : null}
 
           <DialogFooter className="gap-2 pt-1 sm:flex-row sm:justify-end">
             <Button
@@ -305,7 +437,7 @@ export default function Settings() {
               onClick={openDeviceSettings}
               data-testid="button-open-device-settings"
             >
-              Open device settings
+              {platform === "android" ? "Open Android settings" : "I’ll set this up in Windows"}
               <ChevronRight className="ml-1 h-4 w-4" aria-hidden="true" />
             </Button>
           </DialogFooter>
