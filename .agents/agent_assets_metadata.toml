@@ -6,3 +6,18 @@ id = "Wqm7gPaf7tUhtmXE5XUAd"
 uri = "file://exports/Orbit_Presentation.md"
 type = "text"
 title = "Orbit — Presentation Summary"
+logical_id = "1a1f2504-688c-4db5-b74b-dd00d81da2a3"
+
+[[outputs]]
+id = "3gKJ7Vl235Yxrg44Lmyne"
+uri = "file://orbit-complete.zip"
+type = "unspecified"
+title = "Orbit complete project"
+description = "Runnable project source with app code, Android wrapper source, assets, configuration, README, and lockfile. Generated dependencies, build output, caches, Git metadata, and internal agent metadata are excluded."
+logical_id = "72beb89c-5c84-45e0-b880-bac7c6358875"
+content_hash = "sha256:917ea27b96fa686702ce1899c32c8b6b3c99cdab7d206c4bafbf0b0768500a81"
+size = 4078488
+mtime_ms = 1790506169144
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:47b672b9-d058-4c11-8745-9e6576e8a002/72beb89c-5c84-45e0-b880-bac7c6358875/5345c3a1-d0bb-4738-833f-81bec0defbea"
+storage_version_token = "1790506177042069"
+content_type = "application/octet-stream"
