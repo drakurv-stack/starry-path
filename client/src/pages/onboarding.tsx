@@ -5,27 +5,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 
-type Gender = "Male" | "Female" | "Non-binary";
-
 type OnboardingState = {
   motivations: string[];
-  gender?: Gender;
-  ageRange?:
-    | "Under 18"
-    | "18\u201324"
-    | "25\u201334"
-    | "35\u201344"
-    | "45+";
-  startedWatching?:
-    | "Recently"
-    | "1\u20132 years ago"
-    | "3\u20135 years ago"
-    | "6\u201310 years ago"
-    | "10+ years ago";
-  usageIncreased?: "Yes" | "No" | "Not sure";
-  moreExtreme?: "Yes" | "No" | "Not sure";
-  spentMoney?: "Yes" | "No" | "Prefer not to say";
-  religious?: "Yes" | "No" | "Prefer not to say";
+  ageRange?: "Under 18" | "18–24" | "25–34" | "35–44" | "45+";
   name?: string;
 };
 
@@ -36,7 +18,11 @@ function loadState(): OnboardingState {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { motivations: [] };
     const parsed = JSON.parse(raw);
-    return { motivations: [], ...parsed };
+    return {
+      motivations: Array.isArray(parsed.motivations) ? parsed.motivations : [],
+      ageRange: parsed.ageRange,
+      name: typeof parsed.name === "string" ? parsed.name : "",
+    };
   } catch {
     return { motivations: [] };
   }
@@ -64,7 +50,7 @@ function OptionButton({
       className={`w-full rounded-3xl border px-5 py-4 text-left text-[15px] font-semibold leading-snug transition-all btn-press min-tap ${
         selected
           ? "border-white/20 bg-white/12 text-white shadow-[0_0_0_1px_rgba(130,87,255,0.25),0_18px_60px_rgba(120,80,255,0.25)]"
-          : "border-white/10 bg-white/5 text-white/90 hover:bg-white/8 hover:border-white/15"
+          : "border-white/10 bg-white/5 text-white/90 hover:border-white/15 hover:bg-white/8"
       }`}
       data-testid={testId}
     >
@@ -82,37 +68,16 @@ function OptionButton({
   );
 }
 
-function SkipLink({
-  onClick,
-  testId,
-}: {
-  onClick: () => void;
-  testId: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="text-xs font-semibold text-white/60 underline-offset-4 transition hover:text-white/80 hover:underline"
-      data-testid={testId}
-    >
-      Skip
-    </button>
-  );
-}
-
 export default function Onboarding() {
   const [, navigate] = useLocation();
   const [state, setState] = useState<OnboardingState>(() =>
     typeof window === "undefined" ? { motivations: [] } : loadState(),
   );
-
   const [step, setStep] = useState(0);
   const [blockedMinor, setBlockedMinor] = useState(false);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    saveState(state);
+    if (typeof window !== "undefined") saveState(state);
   }, [state]);
 
   const motivationOptions = useMemo(
@@ -127,287 +92,117 @@ export default function Onboarding() {
     [],
   );
 
-  const steps = useMemo(
-    () =>
-      [
-        {
-          key: "motivations",
-          title: "What brings you here?",
-          body: "Choose as many as you like. We\u2019ll tailor your plan around what matters most.",
-          skip: false,
-          render: () => (
-            <div className="mt-5 grid gap-3" data-testid="group-options-motivations">
-              {motivationOptions.map((m) => {
-                const selected = state.motivations.includes(m);
-                return (
-                  <OptionButton
-                    key={m}
-                    label={m}
-                    selected={selected}
-                    onClick={() => {
-                      setState((s) => ({
-                        ...s,
-                        motivations: selected
-                          ? s.motivations.filter((x) => x !== m)
-                          : [...s.motivations, m],
-                      }));
-                    }}
-                    testId={`button-motivation-${m.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`}
-                  />
-                );
-              })}
-              <button
-                type="button"
-                className="grad-pill shine mt-1 w-full rounded-full px-6 py-5 text-base font-bold text-white transition-all btn-press min-tap"
-                onClick={() => setStep((v) => v + 1)}
-                data-testid="button-onboarding-continue-motivations"
-              >
-                Continue
-              </button>
-            </div>
-          ),
-        },
-        {
-          key: "gender",
-          title: "Which best describes you?",
-          body: "This helps us personalize language and examples. You can skip this.",
-          skip: true,
-          render: () => {
-            const options: Gender[] = ["Male", "Female", "Non-binary"];
-            return (
-              <div className="mt-5 grid gap-3" data-testid="group-options-gender">
-                {options.map((g) => (
-                  <OptionButton
-                    key={g}
-                    label={g}
-                    selected={state.gender === g}
-                    onClick={() => {
-                      setState((s) => ({ ...s, gender: g }));
-                      setStep((v) => v + 1);
-                    }}
-                    testId={`button-gender-${g.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
-                  />
-                ))}
-              </div>
-            );
-          },
-        },
-        {
-          key: "age",
-          title: "How old are you?",
-          body: "You must be 18+ to use Orbit.",
-          skip: false,
-          render: () => {
-            const options: NonNullable<OnboardingState["ageRange"]>[] = [
-              "Under 18",
-              "18\u201324",
-              "25\u201334",
-              "35\u201344",
-              "45+",
-            ];
-            return (
-              <div className="mt-5 grid gap-3" data-testid="group-options-age">
-                {options.map((a) => (
-                  <OptionButton
-                    key={a}
-                    label={a}
-                    selected={state.ageRange === a}
-                    onClick={() => {
-                      setState((s) => ({ ...s, ageRange: a }));
-                      if (a === "Under 18") {
-                        setBlockedMinor(true);
-                      } else {
-                        setStep((v) => v + 1);
-                      }
-                    }}
-                    testId={`button-age-${a.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`}
-                  />
-                ))}
-              </div>
-            );
-          },
-        },
-        {
-          key: "started",
-          title: "When did this habit first become part of your routine?",
-          body: "Pick what feels closest. You can always update later.",
-          skip: true,
-          render: () => {
-            const options: NonNullable<OnboardingState["startedWatching"]>[] = [
-              "Recently",
-              "1\u20132 years ago",
-              "3\u20135 years ago",
-              "6\u201310 years ago",
-              "10+ years ago",
-            ];
-            return (
-              <div className="mt-5 grid gap-3" data-testid="group-options-started">
-                {options.map((a) => (
-                  <OptionButton
-                    key={a}
-                    label={a}
-                    selected={state.startedWatching === a}
-                    onClick={() => {
-                      setState((s) => ({ ...s, startedWatching: a }));
-                      setStep((v) => v + 1);
-                    }}
-                    testId={`button-started-${a.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`}
-                  />
-                ))}
-              </div>
-            );
-          },
-        },
-        {
-          key: "increase",
-          title: "Has your usage increased over time?",
-          body: "No judgment \u2014 this is common, and awareness is progress.",
-          skip: true,
-          render: () => {
-            const options: NonNullable<OnboardingState["usageIncreased"]>[] = [
-              "Yes",
-              "No",
-              "Not sure",
-            ];
-            return (
-              <div className="mt-5 grid gap-3" data-testid="group-options-increase">
-                {options.map((a) => (
-                  <OptionButton
-                    key={a}
-                    label={a}
-                    selected={state.usageIncreased === a}
-                    onClick={() => {
-                      setState((s) => ({ ...s, usageIncreased: a }));
-                      setStep((v) => v + 1);
-                    }}
-                    testId={`button-increase-${a.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`}
-                  />
-                ))}
-              </div>
-            );
-          },
-        },
-        {
-          key: "extreme",
-          title: "Have you noticed any changes in this habit over time?",
-          body: "Some people notice they seek more novelty or intensity. Answer what feels true for you.",
-          skip: true,
-          render: () => {
-            const options: NonNullable<OnboardingState["moreExtreme"]>[] = [
-              "Yes",
-              "No",
-              "Not sure",
-            ];
-            return (
-              <div className="mt-5 grid gap-3" data-testid="group-options-extreme">
-                {options.map((a) => (
-                  <OptionButton
-                    key={a}
-                    label={a}
-                    selected={state.moreExtreme === a}
-                    onClick={() => {
-                      setState((s) => ({ ...s, moreExtreme: a }));
-                      setStep((v) => v + 1);
-                    }}
-                    testId={`button-extreme-${a.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`}
-                  />
-                ))}
-              </div>
-            );
-          },
-        },
-        {
-          key: "money",
-          title: "Has this habit had any financial impact on you?",
-          body: "This can help us understand patterns around friction and access.",
-          skip: true,
-          render: () => {
-            const options: NonNullable<OnboardingState["spentMoney"]>[] = [
-              "Yes",
-              "No",
-              "Prefer not to say",
-            ];
-            return (
-              <div className="mt-5 grid gap-3" data-testid="group-options-money">
-                {options.map((a) => (
-                  <OptionButton
-                    key={a}
-                    label={a}
-                    selected={state.spentMoney === a}
-                    onClick={() => {
-                      setState((s) => ({ ...s, spentMoney: a }));
-                      setStep((v) => v + 1);
-                    }}
-                    testId={`button-money-${a.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`}
-                  />
-                ))}
-              </div>
-            );
-          },
-        },
-        {
-          key: "religious",
-          title: "Are you religious?",
-          body: "Optional. This helps us frame support in a way that feels aligned for you.",
-          skip: true,
-          render: () => {
-            const options: NonNullable<OnboardingState["religious"]>[] = [
-              "Yes",
-              "No",
-              "Prefer not to say",
-            ];
-            return (
-              <div className="mt-5 grid gap-3" data-testid="group-options-religious">
-                {options.map((a) => (
-                  <OptionButton
-                    key={a}
-                    label={a}
-                    selected={state.religious === a}
-                    onClick={() => {
-                      setState((s) => ({ ...s, religious: a }));
-                      setStep((v) => v + 1);
-                    }}
-                    testId={`button-religious-${a.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`}
-                  />
-                ))}
-              </div>
-            );
-          },
-        },
-        {
-          key: "name",
-          title: "What should we call you?",
-          body: "A first name or nickname is perfect.",
-          skip: true,
-          render: () => (
-            <div className="mt-5 grid gap-3" data-testid="group-name">
-              <div className="relative">
-                <User className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/55" />
-                <Input
-                  value={state.name ?? ""}
-                  onChange={(e) => setState((s) => ({ ...s, name: e.target.value }))}
-                  placeholder="e.g. Alex"
-                  className="h-14 rounded-3xl border-white/10 bg-white/5 pl-11 text-white placeholder:text-white/35"
-                  data-testid="input-name"
-                />
-              </div>
-              <button
-                type="button"
-                className="grad-pill shine w-full rounded-full px-6 py-5 text-base font-bold text-white transition-all btn-press min-tap"
-                onClick={() => navigate("/personalize")}
-                data-testid="button-onboarding-finish"
-              >
-                Continue
-              </button>
-            </div>
-          ),
-        },
-      ] as const,
-    [motivationOptions, navigate, state.gender, state.motivations, state.name, state.ageRange, state.moreExtreme, state.religious, state.spentMoney, state.startedWatching, state.usageIncreased],
-  );
+  const ageOptions: NonNullable<OnboardingState["ageRange"]>[] = [
+    "Under 18",
+    "18–24",
+    "25–34",
+    "35–44",
+    "45+",
+  ];
 
-  const total = steps.length;
-  const progress = Math.round(((step + 1) / total) * 100);
+  const steps = [
+    {
+      key: "age",
+      title: "How old are you?",
+      body: "Orbit is for adults 18 and older.",
+      render: (
+        <div className="mt-5 grid gap-3" data-testid="group-options-age">
+          {ageOptions.map((age) => (
+            <OptionButton
+              key={age}
+              label={age}
+              selected={state.ageRange === age}
+              onClick={() => {
+                setState((current) => ({ ...current, ageRange: age }));
+                if (age === "Under 18") {
+                  setBlockedMinor(true);
+                } else {
+                  setStep(1);
+                }
+              }}
+              testId={`button-age-${age.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`}
+            />
+          ))}
+        </div>
+      ),
+    },
+    {
+      key: "motivations",
+      title: "What brings you here?",
+      body: "Choose anything that fits. We’ll use this to make your first steps more helpful.",
+      render: (
+        <div className="mt-5 grid gap-3" data-testid="group-options-motivations">
+          {motivationOptions.map((motivation) => {
+            const selected = state.motivations.includes(motivation);
+            return (
+              <OptionButton
+                key={motivation}
+                label={motivation}
+                selected={selected}
+                onClick={() =>
+                  setState((current) => ({
+                    ...current,
+                    motivations: selected
+                      ? current.motivations.filter((item) => item !== motivation)
+                      : [...current.motivations, motivation],
+                  }))
+                }
+                testId={`button-motivation-${motivation
+                  .replace(/[^a-z0-9]+/gi, "-")
+                  .toLowerCase()}`}
+              />
+            );
+          })}
+          <button
+            type="button"
+            className="grad-pill shine mt-1 w-full rounded-full px-6 py-5 text-base font-bold text-white transition-all btn-press min-tap disabled:cursor-not-allowed disabled:opacity-45"
+            onClick={() => setStep(2)}
+            disabled={state.motivations.length === 0}
+            data-testid="button-onboarding-continue-motivations"
+          >
+            Continue
+          </button>
+        </div>
+      ),
+    },
+    {
+      key: "name",
+      title: "What should we call you?",
+      body: "A first name or nickname is perfect.",
+      render: (
+        <div className="mt-5 grid gap-3" data-testid="group-name">
+          <div className="relative">
+            <User className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/55" />
+            <Input
+              value={state.name ?? ""}
+              onChange={(event) =>
+                setState((current) => ({ ...current, name: event.target.value }))
+              }
+              placeholder="e.g. Alex"
+              className="h-14 rounded-3xl border-white/10 bg-white/5 pl-11 text-white placeholder:text-white/35"
+              data-testid="input-name"
+              autoComplete="given-name"
+              autoFocus
+            />
+          </div>
+          <button
+            type="button"
+            className="grad-pill shine w-full rounded-full px-6 py-5 text-base font-bold text-white transition-all btn-press min-tap disabled:cursor-not-allowed disabled:opacity-45"
+            onClick={() => {
+              const name = state.name?.trim() ?? "";
+              const completedState = { ...state, name };
+              saveState(completedState);
+              navigate("/home");
+            }}
+            disabled={!state.name?.trim()}
+            data-testid="button-onboarding-finish"
+          >
+            Enter Orbit
+          </button>
+        </div>
+      ),
+    },
+  ] as const;
 
   if (blockedMinor) {
     return (
@@ -426,7 +221,7 @@ export default function Onboarding() {
                 Orbit is for adults (18+)
               </h1>
               <p className="mt-2 text-sm leading-relaxed text-white/70" data-testid="text-agegate-body">
-                Thanks for being honest. We can\u2019t continue with onboarding. If you\u2019re under 18, consider talking with a trusted adult or a qualified professional for support.
+                Thanks for being honest. We can’t continue with onboarding. If you’re under 18, consider talking with a trusted adult or a qualified professional for support.
               </p>
 
               <div className="mt-6 grid gap-3">
@@ -463,7 +258,8 @@ export default function Onboarding() {
     );
   }
 
-  const current = steps[Math.max(0, Math.min(step, total - 1))];
+  const current = steps[step];
+  const progress = Math.round(((step + 1) / steps.length) * 100);
 
   return (
     <div className="min-h-dvh app-bg text-foreground">
@@ -475,31 +271,25 @@ export default function Onboarding() {
               className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/80 transition hover:bg-white/10"
               onClick={() => {
                 if (step === 0) navigate("/welcome");
-                else setStep((v) => Math.max(0, v - 1));
+                else setStep((value) => Math.max(0, value - 1));
               }}
               data-testid="button-onboarding-back"
             >
               <ArrowLeft className="h-4 w-4" />
               Back
             </button>
-
-            {current.skip ? (
-              <SkipLink
-                onClick={() => setStep((v) => v + 1)}
-                testId="link-onboarding-skip"
-              />
-            ) : (
-              <span className="text-xs text-white/50" data-testid="text-onboarding-noskip">
-                \u00a0
-              </span>
-            )}
+            <span className="text-xs font-semibold text-white/50" data-testid="text-onboarding-fast">
+              A few quick steps
+            </span>
           </div>
 
           <Card className="glass glow mt-5 overflow-hidden fade-up">
             <CardContent className="p-6">
               <div className="mb-4">
                 <div className="mb-2 flex items-center justify-between text-xs text-white/60">
-                  <span data-testid="text-onboarding-step">Question {step + 1} of {total}</span>
+                  <span data-testid="text-onboarding-step">
+                    Step {step + 1} of {steps.length}
+                  </span>
                   <span data-testid="text-onboarding-progress">{progress}%</span>
                 </div>
                 <Progress value={progress} data-testid="progress-onboarding" />
@@ -515,7 +305,7 @@ export default function Onboarding() {
                 {current.body}
               </p>
 
-              {current.render()}
+              {current.render}
 
               <p className="mt-6 text-[11px] leading-relaxed text-white/55" data-testid="text-onboarding-disclaimer">
                 Your answers are stored on this device (local storage) for this prototype. You can reset from Profile anytime.

@@ -25,7 +25,7 @@ import Settings from "@/pages/settings";
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={() => <Redirect to="/welcome" />} />
+      <Route path="/" component={() => <Redirect to="/onboarding" />} />
       <Route path="/welcome" component={Welcome} />
       <Route path="/onboarding" component={Onboarding} />
       <Route path="/personalize" component={Personalize} />
