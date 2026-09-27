@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 168 48" role="img" aria-labelledby="title desc">
   <title id="title">Orbit</title>
   <desc id="desc">A seed orbiting a central circle beside the ORBIT wordmark.</desc>
-  <g fill="none" stroke="#2F5E4E" stroke-width="1.7">
-    <ellipse cx="24" cy="24" rx="17" ry="9" transform="rotate(-24 24 24)"/>
+  <g fill="none" stroke="#2F5E4E" stroke-width="1.45" stroke-linecap="round">
+    <ellipse cx="24" cy="24" rx="17.5" ry="9.5" transform="rotate(-27 24 24)"/>
   </g>
-  <circle cx="24" cy="24" r="4.6" fill="#2F5E4E"/>
-  <circle cx="39.1" cy="17.1" r="2.7" fill="#2F5E4E"/>
-  <text x="57" y="30" fill="#2F5E4E" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600" letter-spacing="4.2">ORBIT</text>
+  <circle cx="24" cy="24" r="4.4" fill="#2F5E4E"/>
+  <path d="M38.3 12.2c2.9.9 4.3 3.2 3.9 6.1-2.9.1-5.1-1.3-5.9-3.9-.2-.8-.2-1.5 0-2.3.7-.1 1.3-.1 2 0Z" fill="#2F5E4E"/>
+  <text x="57" y="30" fill="#2F5E4E" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600" letter-spacing="4.6">ORBIT</text>
 </svg>

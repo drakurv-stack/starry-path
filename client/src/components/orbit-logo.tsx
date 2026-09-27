@@ -19,15 +19,19 @@ export function OrbitMark({
       <ellipse
         cx="24"
         cy="24"
-        rx="17"
-        ry="9"
-        transform="rotate(-24 24 24)"
+        rx="17.5"
+        ry="9.5"
+        transform="rotate(-27 24 24)"
         fill="none"
         stroke="currentColor"
-        strokeWidth="1.6"
+        strokeWidth="1.45"
+        strokeLinecap="round"
       />
-      <circle cx="24" cy="24" r="4.6" fill="currentColor" />
-      <circle cx="39.1" cy="17.1" r="2.7" fill="currentColor" />
+      <circle cx="24" cy="24" r="4.4" fill="currentColor" />
+      <path
+        d="M38.3 12.2c2.9.9 4.3 3.2 3.9 6.1-2.9.1-5.1-1.3-5.9-3.9-.2-.8-.2-1.5 0-2.3.7-.1 1.3-.1 2 0Z"
+        fill="currentColor"
+      />
     </svg>
   );
 }
@@ -48,7 +52,7 @@ export function OrbitLogo({
       aria-label="Orbit"
     >
       <OrbitMark className="h-8 w-8 shrink-0" testId={`${testId}-mark`} />
-      <span className="text-[15px] font-semibold tracking-[0.3em]">ORBIT</span>
+      <span className="text-[15px] font-semibold tracking-[0.34em]">ORBIT</span>
     </div>
   );
 }

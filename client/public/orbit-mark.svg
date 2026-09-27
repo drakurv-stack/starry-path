@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-labelledby="title">
   <title id="title">Orbit mark</title>
-  <ellipse cx="24" cy="24" rx="17" ry="9" transform="rotate(-24 24 24)" fill="none" stroke="#2F5E4E" stroke-width="1.7"/>
-  <circle cx="24" cy="24" r="4.6" fill="#2F5E4E"/>
-  <circle cx="39.1" cy="17.1" r="2.7" fill="#2F5E4E"/>
+  <ellipse cx="24" cy="24" rx="17.5" ry="9.5" transform="rotate(-27 24 24)" fill="none" stroke="#2F5E4E" stroke-width="1.45" stroke-linecap="round"/>
+  <circle cx="24" cy="24" r="4.4" fill="#2F5E4E"/>
+  <path d="M38.3 12.2c2.9.9 4.3 3.2 3.9 6.1-2.9.1-5.1-1.3-5.9-3.9-.2-.8-.2-1.5 0-2.3.7-.1 1.3-.1 2 0Z" fill="#2F5E4E"/>
 </svg>
