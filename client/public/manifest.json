@@ -1,37 +1,37 @@
 {
-  "name": "Starry Path",
-  "short_name": "StarryPath",
+  "name": "Orbit",
+  "short_name": "Orbit",
   "description": "A premium-feel recovery companion prototype with a gentle onboarding, panic button, progress insights, and gamified streaks.",
   "display": "standalone",
   "display_override": ["standalone", "browser"],
   "id": "/",
   "scope": "/",
   "start_url": "/",
-  "background_color": "#030814",
-  "theme_color": "#8257ff",
+  "background_color": "#FAF7F2",
+  "theme_color": "#2F5E4E",
   "icons": [
     {
-      "src": "/favicon.png",
-      "sizes": "192x192",
-      "type": "image/png",
+      "src": "/orbit-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/favicon.png",
-      "sizes": "512x512",
-      "type": "image/png",
+      "src": "/orbit-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/favicon.png",
-      "sizes": "192x192",
-      "type": "image/png",
+      "src": "/orbit-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "maskable"
     },
     {
-      "src": "/favicon.png",
-      "sizes": "512x512",
-      "type": "image/png",
+      "src": "/orbit-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "maskable"
     }
   ]

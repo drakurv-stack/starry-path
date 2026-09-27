@@ -10,6 +10,7 @@ import {
   Smartphone,
 } from "lucide-react";
 import { AppNav } from "@/components/app-nav";
+import { OrbitLogo } from "@/components/orbit-logo";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -144,9 +145,7 @@ export default function Settings() {
               <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             </button>
             <div>
-              <p className="text-xs font-semibold tracking-[0.24em] text-muted-foreground">
-                ORBIT
-              </p>
+              <OrbitLogo className="text-sm" testId="text-settings-brand" />
               <h1 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">
                 Settings
               </h1>

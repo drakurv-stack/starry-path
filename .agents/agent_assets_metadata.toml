@@ -6,3 +6,18 @@ id = "Wqm7gPaf7tUhtmXE5XUAd"
 uri = "file://exports/Orbit_Presentation.md"
 type = "text"
 title = "Orbit — Presentation Summary"
+logical_id = "858e9cb6-6977-4bd1-a251-19b56673c283"
+
+[[outputs]]
+id = "1cKJqIZcfRZ60f5ME53-G"
+uri = "file://client/public/orbit-logo.svg"
+type = "image"
+title = "Orbit wordmark logo"
+description = "Flat SVG wordmark for Orbit with a forest-green seed orbit mark and spaced uppercase lettering."
+logical_id = "b44e284a-407a-4cf2-9653-e6af18f84cde"
+content_hash = "sha256:f4fcd3389cf09deeb1788bc27bae82d47a74a80c86837ae2a60c3a9d9b358051"
+size = 613
+mtime_ms = 1790537113468
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:6c2b1609-c56d-4a08-9524-a9cdb0eb532f/b44e284a-407a-4cf2-9653-e6af18f84cde/55b4572a-5f1d-48b5-863a-53d6af64679a"
+storage_version_token = "1790537166340664"
+content_type = "image/svg+xml"

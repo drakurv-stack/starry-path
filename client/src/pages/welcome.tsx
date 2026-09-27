@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { OrbitLogo } from "@/components/orbit-logo";
 
 type Slide = {
   key: string;
@@ -114,12 +115,7 @@ export default function Welcome() {
         <div className="page-in">
           <div className="flex items-center justify-between">
             <div>
-              <div
-                className="text-xs font-medium tracking-[0.22em] text-muted-foreground"
-                data-testid="text-welcome-brand"
-              >
-                ORBIT
-              </div>
+              <OrbitLogo className="text-sm" testId="text-welcome-brand" />
               <div
                 className="mt-1 text-sm text-muted-foreground"
                 data-testid="text-welcome-tagline"

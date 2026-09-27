@@ -21,6 +21,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { AppNav } from "@/components/app-nav";
 import { useContentShield } from "@/lib/content-shield";
+import { OrbitLogo } from "@/components/orbit-logo";
 
 const ONBOARDING_KEY = "orbit:onboarding";
 const PROFILE_KEY = "orbit:profile";
@@ -174,12 +175,7 @@ export default function Home() {
         <div className="page-in">
           <header className="flex items-start justify-between gap-4">
             <div>
-              <div
-                className="text-xs font-semibold tracking-[0.24em] text-muted-foreground"
-                data-testid="text-home-brand"
-              >
-                ORBIT
-              </div>
+              <OrbitLogo className="text-sm" testId="text-home-brand" />
               <div className="mt-3">
                 <p className="text-sm font-medium text-muted-foreground">
                   Your recovery dashboard
