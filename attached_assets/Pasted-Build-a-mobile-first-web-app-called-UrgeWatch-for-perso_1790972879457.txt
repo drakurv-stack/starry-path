@@ -1,0 +1,46 @@
+Build a mobile-first web app called "UrgeWatch" for personal self-awareness around addiction urges. It must work with no external hardware, using only the phone's camera and motion sensors. Stack: Flask backend, SQLite, scikit-learn, plain HTML/JS frontend (no heavy framework).
+
+CORE FEATURES
+
+1. Check-in screen (camera PPG)
+- User holds a fingertip over the rear camera + flash for 45 seconds.
+- In JS, use getUserMedia and a canvas to read the average red channel per frame, then send the series to the backend.
+- Backend computes BPM and HRV (RMSSD) with scipy (bandpass filter 0.7-4 Hz, peak detection).
+- Show a quality warning if the signal is noisy and ask the user to retry.
+
+2. Motion context
+- During check-in, collect DeviceMotion accelerometer data and compute a motion level (low / medium / high).
+- Request sensor permission properly for iOS.
+
+3. Sleep input
+- Simple daily form: hours slept last night (0-12) and sleep quality (1-5).
+
+4. Urge logging
+- A big "I have an urge" button that saves a timestamped label with the latest check-in.
+- Also a "Check-in was calm" button so the data has both positive and negative examples.
+
+5. Personal baseline
+- Store every check-in (timestamp, BPM, HRV, motion, sleep hours, label).
+- Compute the user's rolling baseline BPM and HRV (mean and std over 14 days).
+
+6. Risk engine (two stages)
+- Stage 1 (fewer than 30 labeled check-ins): rule-based.
+  - HIGH RISK if BPM is more than 1 std above baseline AND HRV is more than 1 std below baseline AND motion is low.
+  - Add +1 vulnerability if last night's sleep was under 6 hours (lowers the thresholds by 0.25 std).
+  - If BPM is high and motion is high, label it "Exercise" (not risk).
+- Stage 2 (30 or more labels): train a RandomForestClassifier on BPM, HRV, motion, sleep hours, time of day, and deviation from baseline. Retrain automatically when new labels arrive. Show accuracy and which stage is active.
+
+7. Intervention screen
+- When risk is HIGH, show a calming screen: 4-7-8 breathing animation, a 10-minute urge-surfing timer, and a "text a support person" button using a configurable phone number.
+
+8. History dashboard
+- Chart.js charts of BPM, HRV, and urge events over time, plus a "high vulnerability windows" summary (e.g. which hours of the day are riskiest).
+
+RULES
+- Frame everything as self-awareness support, not diagnosis. Add a short disclaimer on the first screen.
+- All data stays local in SQLite. Add an "export my data" (CSV) and "delete all data" button.
+- Keep the UI minimal and calm: dark theme, large buttons, one action per screen.
+- Handle HTTPS requirements for camera/motion (use Replit's built-in HTTPS URL).
+- Include a README explaining how to test on a phone.
+
+Build in this order: check-in + BPM/HRV first, then urge logging, then baseline and rules, then the dashboard, then the ML stage.

@@ -1,0 +1,31 @@
+# PPGbetter attribution and license
+
+UrgeWatch includes a TypeScript port of the active pulse-estimation path in the PPGbetter Android app. It uses average frame luminance, three-frame local maxima, a minimum gap between accepted peaks, and the median of intervals from the latest 10 seconds. The Android source computes a smoothed value, but the active peak detector does not use it.
+
+The PPGbetter source archive provided for this project includes the following MIT license notice:
+
+```text
+MIT License
+
+Copyright (c) 2025 J. K. Bancerewicz, J. J. Kotłowski, O. Lozovyy, J. B. Morawska, M. Rzęsa
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+The same archive's README also mentions GPL-2.0, which conflicts with its `LICENSE` file. This discrepancy has not been resolved with the authors; confirm the intended license before distributing the project externally.

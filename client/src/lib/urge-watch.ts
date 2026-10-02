@@ -8,6 +8,41 @@ export interface RedSample {
   red: number;
 }
 
+export interface BrightnessSample {
+  timeMs: number;
+  brightness: number;
+}
+
+export type CaptureMode = "finger" | "face";
+
+export interface RgbSample {
+  timeMs: number;
+  red: number;
+  green: number;
+  blue: number;
+}
+
+export interface PpgBetterEstimate {
+  bpm: number | null;
+  peakCount: number;
+  reason: string;
+}
+
+export interface EstimatorComparison {
+  id: string;
+  recordedAt: string;
+  captureMode?: CaptureMode;
+  orbitBpm: number | null;
+  orbitQuality: "good" | "noisy";
+  ppgBetterBpm: number | null;
+  ppgBetterPeakCount: number;
+  ppgBetterReason: string;
+  vitalLensPosBpm?: number | null;
+  vitalLensPosQuality?: "good" | "noisy" | null;
+  vitalLensPosReason?: string;
+  referenceBpm: number | null;
+}
+
 export interface UrgeReading {
   id: string;
   recordedAt: string;
@@ -31,6 +66,7 @@ export interface UrgeDataset {
   readings: UrgeReading[];
   labels: UrgeLabelEvent[];
   supportNumber: string;
+  comparisons: EstimatorComparison[];
 }
 
 export interface SignalEstimate {
@@ -59,7 +95,7 @@ export interface RiskAssessment {
   sleepAdjusted?: boolean;
 }
 
-const DEFAULT_DATASET: UrgeDataset = { readings: [], labels: [], supportNumber: "" };
+const DEFAULT_DATASET: UrgeDataset = { readings: [], labels: [], supportNumber: "", comparisons: [] };
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export function readUrgeDataset(): UrgeDataset {
@@ -70,6 +106,7 @@ export function readUrgeDataset(): UrgeDataset {
       readings: Array.isArray(parsed.readings) ? parsed.readings : [],
       labels: Array.isArray(parsed.labels) ? parsed.labels : [],
       supportNumber: typeof parsed.supportNumber === "string" ? parsed.supportNumber : "",
+      comparisons: Array.isArray(parsed.comparisons) ? parsed.comparisons : [],
     };
   } catch {
     return { ...DEFAULT_DATASET };
@@ -77,7 +114,7 @@ export function readUrgeDataset(): UrgeDataset {
 }
 
 export function writeUrgeDataset(dataset: UrgeDataset) {
-  if (!dataset.readings.length && !dataset.labels.length && !dataset.supportNumber) {
+  if (!dataset.readings.length && !dataset.labels.length && !dataset.supportNumber && !dataset.comparisons.length) {
     localStorage.removeItem(URGE_WATCH_KEY);
     return;
   }
@@ -194,6 +231,159 @@ export function estimatePulse(samples: RedSample[], captureDurationSeconds: numb
   }
 
   return { bpm, hrvMs, quality: "good", reason: "Reading captured. These camera estimates are for self-awareness only." };
+}
+
+/**
+ * Port of PPGbetter's active Android peak path: raw frame brightness, three-frame
+ * local maxima, a >600 ms peak gap, then the median interval from the last 10 s.
+ * The Android source also calculates a smoothed value but does not use it here.
+ */
+export function estimatePpgBetter(samples: BrightnessSample[]): PpgBetterEstimate {
+  const ordered = [...samples].sort((a, b) => a.timeMs - b.timeMs);
+  if (ordered.length < 256) {
+    return {
+      bpm: null,
+      peakCount: 0,
+      reason: "PPGbetter needs at least 256 camera frames before estimating pulse.",
+    };
+  }
+
+  const peaks: number[] = [];
+  for (let index = 1; index < ordered.length - 1; index++) {
+    const previous = ordered[index - 1];
+    const current = ordered[index];
+    const next = ordered[index + 1];
+    if (
+      current.brightness > previous.brightness &&
+      current.brightness > next.brightness &&
+      (!peaks.length || current.timeMs - peaks[peaks.length - 1] > 600)
+    ) {
+      peaks.push(current.timeMs);
+    }
+  }
+
+  const latestTime = ordered[ordered.length - 1].timeMs;
+  const recentPeaks = peaks.filter((time) => time >= latestTime - 10_000);
+  if (recentPeaks.length < 2) {
+    return {
+      bpm: null,
+      peakCount: recentPeaks.length,
+      reason: "PPGbetter found fewer than two peaks in the latest 10 seconds.",
+    };
+  }
+
+  const intervals = recentPeaks.slice(1).map((time, index) => time - recentPeaks[index]);
+  intervals.sort((a, b) => a - b);
+  const middle = Math.floor(intervals.length / 2);
+  const medianInterval = intervals.length % 2
+    ? intervals[middle]
+    : (intervals[middle - 1] + intervals[middle]) / 2;
+  const bpm = Math.floor(60_000 / medianInterval);
+  if (bpm < 45 || bpm > 180) {
+    return {
+      bpm: null,
+      peakCount: recentPeaks.length,
+      reason: `PPGbetter detected ${bpm} BPM, outside its 45–180 BPM acceptance range.`,
+    };
+  }
+
+  return {
+    bpm,
+    peakCount: recentPeaks.length,
+    reason: "PPGbetter estimate uses raw brightness peaks from the latest 10 seconds.",
+  };
+}
+
+function populationStandardDeviation(values: number[]) {
+  if (!values.length) return 0;
+  const mean = average(values);
+  return Math.sqrt(values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / values.length);
+}
+
+/**
+ * Browser-local adaptation of VitalLens' POS method. RGB traces are sampled
+ * from the guided face region, normalized in 48-frame windows, projected,
+ * overlap-averaged, and passed to Orbit's existing pulse-quality check.
+ */
+export function estimateVitalLensPos(samples: RgbSample[], captureDurationSeconds: number): SignalEstimate {
+  const ordered = [...samples].sort((a, b) => a.timeMs - b.timeMs);
+  if (ordered.length < 256 || captureDurationSeconds < 40) {
+    return {
+      bpm: 0,
+      hrvMs: 0,
+      quality: "noisy",
+      reason: "VitalLens POS needs a steady face capture of at least 40 seconds.",
+    };
+  }
+
+  const sampleRate = 30;
+  const firstTime = ordered[0].timeMs;
+  const lastTime = ordered[ordered.length - 1].timeMs;
+  const count = Math.floor(((lastTime - firstTime) / 1000) * sampleRate);
+  if (count < 48) {
+    return {
+      bpm: 0,
+      hrvMs: 0,
+      quality: "noisy",
+      reason: "The face-camera signal was interrupted. Keep your face in the guide and retry.",
+    };
+  }
+
+  const resampled: RgbSample[] = [];
+  let sourceIndex = 0;
+  for (let index = 0; index < count; index++) {
+    const timeMs = firstTime + (index / sampleRate) * 1000;
+    while (sourceIndex < ordered.length - 2 && ordered[sourceIndex + 1].timeMs < timeMs) {
+      sourceIndex++;
+    }
+    const left = ordered[sourceIndex];
+    const right = ordered[Math.min(sourceIndex + 1, ordered.length - 1)];
+    const span = right.timeMs - left.timeMs;
+    const fraction = span > 0 ? (timeMs - left.timeMs) / span : 0;
+    resampled.push({
+      timeMs,
+      red: left.red + (right.red - left.red) * fraction,
+      green: left.green + (right.green - left.green) * fraction,
+      blue: left.blue + (right.blue - left.blue) * fraction,
+    });
+  }
+
+  const windowLength = 48;
+  const signal = new Array<number>(count).fill(0);
+  const coverage = new Array<number>(count).fill(0);
+  for (let start = 0; start <= count - windowLength; start++) {
+    const window = resampled.slice(start, start + windowLength);
+    const meanRed = average(window.map((sample) => sample.red));
+    const meanGreen = average(window.map((sample) => sample.green));
+    const meanBlue = average(window.map((sample) => sample.blue));
+    if (meanRed <= 0 || meanGreen <= 0 || meanBlue <= 0) continue;
+
+    const projectionOne: number[] = [];
+    const projectionTwo: number[] = [];
+    for (const sample of window) {
+      const red = sample.red / meanRed;
+      const green = sample.green / meanGreen;
+      const blue = sample.blue / meanBlue;
+      projectionOne.push(green - blue);
+      projectionTwo.push(-2 * red + green + blue);
+    }
+    const stdOne = populationStandardDeviation(projectionOne);
+    const stdTwo = populationStandardDeviation(projectionTwo);
+    const tuning = stdTwo > 1e-12 ? stdOne / stdTwo : 0;
+    for (let offset = 0; offset < windowLength; offset++) {
+      signal[start + offset] += -(projectionOne[offset] + tuning * projectionTwo[offset]);
+      coverage[start + offset]++;
+    }
+  }
+
+  const waveformSamples: RedSample[] = resampled.flatMap((sample, index) => {
+    if (!coverage[index]) return [];
+    return [{
+      timeMs: sample.timeMs,
+      red: (signal[index] / coverage[index]) * 100,
+    }];
+  });
+  return estimatePulse(waveformSamples, captureDurationSeconds);
 }
 
 export function summarizeMotion(index: number | null): MotionLevel {
@@ -496,6 +686,11 @@ export function buildUrgeCsv(dataset: UrgeDataset) {
     "motion_index",
     "sleep_hours",
     "sleep_quality",
+    "comparison_orbit_bpm",
+    "orbit_signal_quality",
+    "ppgbetter_bpm",
+    "ppgbetter_peak_count_last_10s",
+    "reference_bpm",
   ];
   const rows = dataset.labels.map((event) => {
     const reading = dataset.readings.find((item) => item.id === event.readingId);
@@ -510,6 +705,11 @@ export function buildUrgeCsv(dataset: UrgeDataset) {
       reading?.motionIndex ?? null,
       reading?.sleepHours ?? null,
       reading?.sleepQuality ?? null,
+      null,
+      null,
+      null,
+      null,
+      null,
     ].map(quote).join(",");
   });
   dataset.readings.forEach((reading) => {
@@ -525,6 +725,30 @@ export function buildUrgeCsv(dataset: UrgeDataset) {
       reading.motionIndex,
       reading.sleepHours,
       reading.sleepQuality,
+      null,
+      null,
+      null,
+      null,
+      null,
+    ].map(quote).join(","));
+  });
+  dataset.comparisons.forEach((comparison) => {
+    rows.push([
+      "estimator-comparison",
+      comparison.recordedAt,
+      comparison.id,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      comparison.orbitBpm,
+      comparison.orbitQuality,
+      comparison.ppgBetterBpm,
+      comparison.ppgBetterPeakCount,
+      comparison.referenceBpm,
     ].map(quote).join(","));
   });
   return [header.map(quote).join(","), ...rows].join("\r\n");

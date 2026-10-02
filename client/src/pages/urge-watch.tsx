@@ -21,10 +21,13 @@ import {
 } from "lucide-react";
 import { AppNav } from "@/components/app-nav";
 import { Card, CardContent } from "@/components/ui/card";
+import { EstimatorComparisonCard } from "@/components/urge-watch/estimator-comparison";
 import {
   assessReading,
   buildUrgeCsv,
+  estimatePpgBetter,
   estimatePulse,
+  estimateVitalLensPos,
   getBaseline,
   getLatestLabel,
   getVulnerabilityHours,
@@ -32,8 +35,12 @@ import {
   summarizeMotion,
   URGE_WATCH_KEY,
   writeUrgeDataset,
+  type CaptureMode,
   type MotionLevel,
+  type BrightnessSample,
+  type EstimatorComparison,
   type RedSample,
+  type RgbSample,
   type UrgeDataset,
   type UrgeLabel,
   type UrgeReading,
@@ -189,6 +196,7 @@ export default function UrgeWatch() {
   const [sleepHours, setSleepHours] = useState("7");
   const [sleepQuality, setSleepQuality] = useState("3");
   const [isCapturing, setIsCapturing] = useState(false);
+  const [activeCaptureMode, setActiveCaptureMode] = useState<CaptureMode>("finger");
   const [remainingSeconds, setRemainingSeconds] = useState(CAPTURE_SECONDS);
   const [cameraError, setCameraError] = useState("");
   const [sensorNote, setSensorNote] = useState("");
@@ -199,14 +207,20 @@ export default function UrgeWatch() {
   const [timerSeconds, setTimerSeconds] = useState(10 * 60);
   const [timerRunning, setTimerRunning] = useState(false);
   const [supportDraft, setSupportDraft] = useState(() => readUrgeDataset().supportNumber);
+  const [referenceDrafts, setReferenceDrafts] = useState<Record<string, string>>({});
+  const [comparisonMessage, setComparisonMessage] = useState("");
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const frameRef = useRef<number | null>(null);
   const countdownRef = useRef<number | null>(null);
   const startedAtRef = useRef(0);
+  const lastVideoTimeRef = useRef(-1);
+  const captureModeRef = useRef<CaptureMode>("finger");
   const activeRef = useRef(false);
   const samplesRef = useRef<RedSample[]>([]);
+  const brightnessSamplesRef = useRef<BrightnessSample[]>([]);
+  const rgbSamplesRef = useRef<RgbSample[]>([]);
   const motionDeltasRef = useRef<number[]>([]);
   const previousMotionRef = useRef<number | null>(null);
   const captureRunRef = useRef(0);
@@ -262,8 +276,11 @@ export default function UrgeWatch() {
     const context = canvasRef.current?.getContext("2d");
     context?.clearRect(0, 0, canvasRef.current?.width || 0, canvasRef.current?.height || 0);
     samplesRef.current = [];
+    brightnessSamplesRef.current = [];
+    rgbSamplesRef.current = [];
     motionDeltasRef.current = [];
     previousMotionRef.current = null;
+    lastVideoTimeRef.current = -1;
   }, []);
 
   useEffect(() => () => {
@@ -305,8 +322,10 @@ export default function UrgeWatch() {
     if (!activeRef.current) return;
     activeRef.current = false;
     const capturedSamples = samplesRef.current;
+    const capturedBrightnessSamples = brightnessSamplesRef.current;
     const capturedMotionDeltas = motionDeltasRef.current;
     samplesRef.current = [];
+    brightnessSamplesRef.current = [];
     motionDeltasRef.current = [];
     const duration = (performance.now() - startedAtRef.current) / 1000;
     releaseSensors();
@@ -315,34 +334,54 @@ export default function UrgeWatch() {
     setTorchEnabled(false);
     setRemainingSeconds(0);
 
-    const estimate = estimatePulse(capturedSamples, duration);
-    if (estimate.quality !== "good") {
-      setCameraError(estimate.reason);
-      setLatestEstimate("");
-      return;
-    }
-
+    const orbitEstimate = estimatePulse(capturedSamples, duration);
+    const ppgBetterEstimate = estimatePpgBetter(capturedBrightnessSamples);
+    const recordedAt = new Date().toISOString();
+    const comparison: EstimatorComparison = {
+      id: newId(),
+      recordedAt,
+      orbitBpm: orbitEstimate.quality === "good" ? orbitEstimate.bpm : null,
+      orbitQuality: orbitEstimate.quality,
+      ppgBetterBpm: ppgBetterEstimate.bpm,
+      ppgBetterPeakCount: ppgBetterEstimate.peakCount,
+      ppgBetterReason: ppgBetterEstimate.reason,
+      referenceBpm: null,
+    };
+    const difference = comparison.orbitBpm !== null && comparison.ppgBetterBpm !== null
+      ? Math.abs(comparison.orbitBpm - comparison.ppgBetterBpm)
+      : null;
+    const resultText = `Same-capture comparison — Orbit: ${comparison.orbitBpm === null ? "no estimate" : `${comparison.orbitBpm} BPM`}; PPGbetter: ${comparison.ppgBetterBpm === null ? "no estimate" : `${comparison.ppgBetterBpm} BPM`}${difference === null ? "" : `; gap ${difference} BPM`}.`;
     const motionIndex = capturedMotionDeltas.length
       ? Math.sqrt(capturedMotionDeltas.reduce((sum, value) => sum + value ** 2, 0) / capturedMotionDeltas.length)
       : null;
     const motionLevel: MotionLevel = summarizeMotion(motionIndex);
-    const reading: UrgeReading = {
-      id: newId(),
-      recordedAt: new Date().toISOString(),
-      bpm: estimate.bpm,
-      hrvMs: estimate.hrvMs,
-      motionLevel,
-      motionIndex: motionIndex === null ? null : Number(motionIndex.toFixed(2)),
-      sleepHours: Number(sleepHours),
-      sleepQuality: Number(sleepQuality),
-      sampleCount: capturedSamples.length,
-    };
-    setDataset((current) => ({ ...current, readings: [reading, ...current.readings] }));
-    setLatestEstimate(estimate.reason);
-    setCameraError("");
-    setSensorNote(motionLevel === "unknown"
-      ? "Motion sensors were unavailable; this reading is still saved without a motion context."
-      : `Motion context: ${motionLevel}.`);
+    const reading: UrgeReading | null = orbitEstimate.quality === "good"
+      ? {
+          id: newId(),
+          recordedAt,
+          bpm: orbitEstimate.bpm,
+          hrvMs: orbitEstimate.hrvMs,
+          motionLevel,
+          motionIndex: motionIndex === null ? null : Number(motionIndex.toFixed(2)),
+          sleepHours: Number(sleepHours),
+          sleepQuality: Number(sleepQuality),
+          sampleCount: capturedSamples.length,
+        }
+      : null;
+    setDataset((current) => ({
+      ...current,
+      comparisons: [comparison, ...current.comparisons],
+      readings: reading ? [reading, ...current.readings] : current.readings,
+    }));
+    setLatestEstimate(resultText);
+    setCameraError(orbitEstimate.quality !== "good" && ppgBetterEstimate.bpm === null
+      ? `Neither method returned a pulse estimate. Orbit: ${orbitEstimate.reason} PPGbetter: ${ppgBetterEstimate.reason}`
+      : "");
+    setSensorNote(reading
+      ? motionLevel === "unknown"
+        ? "Orbit reading saved. Motion sensors were unavailable; this reading has no motion context."
+        : `Orbit reading saved. Motion context: ${motionLevel}.`
+      : "Comparison saved. Orbit did not add this capture to its baseline because its signal was noisy.");
     setLabelSaved("");
   }, [releaseSensors, sleepHours, sleepQuality]);
 
@@ -364,6 +403,7 @@ export default function UrgeWatch() {
     setSensorNote("");
     setRemainingSeconds(CAPTURE_SECONDS);
     samplesRef.current = [];
+    brightnessSamplesRef.current = [];
     motionDeltasRef.current = [];
     previousMotionRef.current = null;
 
@@ -440,17 +480,33 @@ export default function UrgeWatch() {
         const video = videoRef.current;
         const canvas = canvasRef.current;
         const context = canvas?.getContext("2d", { willReadFrequently: true });
-        if (video && canvas && context && video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+        if (
+          video &&
+          canvas &&
+          context &&
+          video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
+          video.currentTime !== lastVideoTimeRef.current
+        ) {
+          lastVideoTimeRef.current = video.currentTime;
           canvas.width = 48;
           canvas.height = 36;
           context.drawImage(video, 0, 0, canvas.width, canvas.height);
           const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
           let redTotal = 0;
+          let brightnessTotal = 0;
           const pixelCount = pixels.length / 4;
-          for (let i = 0; i < pixels.length; i += 4) redTotal += pixels[i];
+          for (let i = 0; i < pixels.length; i += 4) {
+            redTotal += pixels[i];
+            brightnessTotal += pixels[i] * 0.299 + pixels[i + 1] * 0.587 + pixels[i + 2] * 0.114;
+          }
+          const timeMs = performance.now() - startedAtRef.current;
           samplesRef.current.push({
-            timeMs: performance.now() - startedAtRef.current,
+            timeMs,
             red: redTotal / pixelCount,
+          });
+          brightnessSamplesRef.current.push({
+            timeMs,
+            brightness: brightnessTotal / pixelCount,
           });
         }
         frameRef.current = requestAnimationFrame(sampleFrame);
@@ -517,14 +573,31 @@ export default function UrgeWatch() {
     URL.revokeObjectURL(url);
   }, [dataset]);
 
+  const saveComparisonReference = useCallback((comparisonId: string) => {
+    const value = Number(referenceDrafts[comparisonId]);
+    if (!Number.isFinite(value) || value < 35 || value > 220) {
+      setComparisonMessage("Enter a reference pulse between 35 and 220 BPM.");
+      return;
+    }
+    setDataset((current) => ({
+      ...current,
+      comparisons: current.comparisons.map((comparison) => comparison.id === comparisonId
+        ? { ...comparison, referenceBpm: Math.round(value) }
+        : comparison),
+    }));
+    setComparisonMessage("Reference saved on this device.");
+  }, [referenceDrafts]);
+
   const deleteData = useCallback(() => {
-    if (!window.confirm("Delete all UrgeWatch readings, labels, and the saved support number from this device? This cannot be undone.")) return;
+    if (!window.confirm("Delete all UrgeWatch readings, labels, estimator comparisons, reference pulse values, and the saved support number from this device? This cannot be undone.")) return;
     stopCapture();
     localStorage.removeItem(URGE_WATCH_KEY);
-    const empty: UrgeDataset = { readings: [], labels: [], supportNumber: "" };
+    const empty: UrgeDataset = { readings: [], labels: [], supportNumber: "", comparisons: [] };
     setDataset(empty);
     setSupportDraft("");
     setLabelSaved("");
+    setReferenceDrafts({});
+    setComparisonMessage("");
     setLatestEstimate("");
     setCameraError("");
     setTimerRunning(false);
@@ -1023,6 +1096,14 @@ export default function UrgeWatch() {
             </CardContent>
           </Card>
 
+          <EstimatorComparisonCard
+            comparisons={dataset.comparisons}
+            referenceDrafts={referenceDrafts}
+            message={comparisonMessage}
+            onReferenceChange={(id, value) => setReferenceDrafts((current) => ({ ...current, [id]: value }))}
+            onSaveReference={saveComparisonReference}
+          />
+
           <Card className="mt-3 rounded-2xl border-border bg-card shadow-sm">
             <CardContent className="p-5">
               <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
@@ -1099,7 +1180,7 @@ export default function UrgeWatch() {
         <div className="mt-8 flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           <p>
-            UrgeWatch works in this browser and stores readings in local browser storage. Clearing site data or changing devices removes access to these records. Export a CSV first if you want a separate copy.
+            UrgeWatch stores readings, estimator comparisons, and any reference pulse values in this browser only. Clearing site data or changing devices removes access to these records. Export a CSV first if you want a separate copy.
           </p>
         </div>
 
