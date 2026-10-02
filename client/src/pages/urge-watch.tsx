@@ -374,7 +374,10 @@ export default function UrgeWatch() {
       } catch {
         motionGranted = false;
       }
-      if (captureRun !== captureRunRef.current) return;
+      if (captureRun !== captureRunRef.current) {
+        releaseSensors();
+        return;
+      }
       if (!motionGranted) {
         setSensorNote("Motion permission is unavailable. Pulse capture can continue without it.");
       }
@@ -393,6 +396,7 @@ export default function UrgeWatch() {
       });
       if (captureRun !== captureRunRef.current) {
         stream.getTracks().forEach((track) => track.stop());
+        releaseSensors();
         return;
       }
       streamRef.current = stream;
@@ -409,12 +413,21 @@ export default function UrgeWatch() {
       } catch {
         hasTorch = false;
       }
+      if (captureRun !== captureRunRef.current) {
+        releaseSensors();
+        return;
+      }
       setTorchEnabled(hasTorch);
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
       }
-      if (captureRun !== captureRunRef.current) return;
+      if (captureRun !== captureRunRef.current) {
+        releaseSensors();
+        return;
+      }
+      motionDeltasRef.current = [];
+      previousMotionRef.current = null;
       startedAtRef.current = performance.now();
       activeRef.current = true;
       startPendingRef.current = false;
@@ -450,7 +463,10 @@ export default function UrgeWatch() {
         if (elapsed >= CAPTURE_SECONDS) finishCapture();
       }, 200);
     } catch (error) {
-      if (captureRun !== captureRunRef.current) return;
+      if (captureRun !== captureRunRef.current) {
+        releaseSensors();
+        return;
+      }
       startPendingRef.current = false;
       setIsStartingCapture(false);
       releaseSensors();
@@ -607,6 +623,11 @@ export default function UrgeWatch() {
                   <Check className="h-4 w-4" aria-hidden="true" /> Camera light enabled
                 </p>
               )}
+              {isCapturing && !torchEnabled && (
+                <p className="mt-2 text-xs text-muted-foreground" role="status">
+                  This browser could not confirm the camera light is on. The reading may be too faint; you can cancel and try a supported phone browser.
+                </p>
+              )}
 
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
                 <div>
@@ -614,6 +635,7 @@ export default function UrgeWatch() {
                   <input
                     id="sleep-hours"
                     type="number"
+                    disabled={isCapturing || isStartingCapture}
                     min="0"
                     max="12"
                     step="0.5"
@@ -627,6 +649,7 @@ export default function UrgeWatch() {
                   <label htmlFor="sleep-quality" className="mb-2 block text-sm font-medium">Sleep quality · 1–5</label>
                   <select
                     id="sleep-quality"
+                    disabled={isCapturing || isStartingCapture}
                     value={sleepQuality}
                     onChange={(event) => setSleepQuality(event.target.value)}
                     className="min-h-12 w-full rounded-xl border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -658,6 +681,17 @@ export default function UrgeWatch() {
                     className="min-tap mt-4 rounded-xl border border-border px-4 py-2 text-sm font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground"
                   >
                     Cancel reading
+                  </button>
+                </div>
+              ) : isStartingCapture ? (
+                <div className="mt-5 rounded-xl border border-border bg-secondary p-4">
+                  <p className="text-sm font-medium" role="status">Waiting for camera access…</p>
+                  <button
+                    type="button"
+                    onClick={stopCapture}
+                    className="min-tap mt-3 rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold text-muted-foreground hover:bg-background hover:text-foreground"
+                  >
+                    Cancel camera request
                   </button>
                 </div>
               ) : (

@@ -77,6 +77,10 @@ export function readUrgeDataset(): UrgeDataset {
 }
 
 export function writeUrgeDataset(dataset: UrgeDataset) {
+  if (!dataset.readings.length && !dataset.labels.length && !dataset.supportNumber) {
+    localStorage.removeItem(URGE_WATCH_KEY);
+    return;
+  }
   localStorage.setItem(URGE_WATCH_KEY, JSON.stringify(dataset));
 }
 

@@ -1,0 +1,1 @@
+- [UrgeWatch privacy boundary](urge-watch-privacy.md) — Keep health-context readings and labels in browser storage unless the user approves server sync.
