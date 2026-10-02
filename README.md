@@ -1,6 +1,6 @@
 # Orbit — Recovery Companion
 
-A full-stack web application that helps users track progress in overcoming addictive behaviors — with a gentle onboarding flow, daily check-ins, streak tracking with gamification (orbs), community support, educational lessons, and a coach messaging feature. Dark, space-themed UI with glassmorphism design.
+A full-stack web application that helps users track progress in overcoming addictive behaviors — with a gentle onboarding flow, daily check-ins, streak tracking with gamification (orbs), community support, educational lessons, coach messaging, and private UrgeWatch self-awareness tools.
 
 > Built as a hackathon project.
 
@@ -12,6 +12,7 @@ A full-stack web application that helps users track progress in overcoming addic
 - **Community** — anonymous posts with tags, likes, threaded replies
 - **Lessons** — educational content on recovery
 - **Coach messaging** — supportive conversational guidance
+- **UrgeWatch** — optional camera-based pulse estimate, sleep and motion context, timestamped urge/calm labels, personal baseline patterns, guided pause tools, and CSV export
 
 ## 🛠️ Tech Stack
 
@@ -34,6 +35,15 @@ npm run dev
 
 The app runs on `http://localhost:5000` in development.
 The current server uses in-memory storage, so no database is needed to run it. Data resets whenever the server restarts. `npm run db:push` is only for setting up the PostgreSQL schema and requires a `DATABASE_URL`; it does not switch the app to persistent storage.
+
+### Testing UrgeWatch on a phone
+
+1. Start the app with `npm run dev` and open the workspace's HTTPS web preview on your phone. Camera and motion access require a secure HTTPS page; `localhost` is suitable only for testing on the same device.
+2. Open **Urges** from the bottom navigation. Enter last night's sleep, then start the 45-second check-in and allow camera and motion access when asked.
+3. Cover the rear camera and flash with a fingertip and hold still. The browser reads the camera frames locally; a noisy signal asks you to retry.
+4. Add an urge or calm label to connect the moment to the latest reading. Use **Export CSV** to save a copy or **Delete my data** to remove UrgeWatch records from that browser.
+
+UrgeWatch stores readings and the optional support-person number in this browser's local storage. Camera frames are processed in memory and are not saved or uploaded. Clearing browser/site data removes the records. The pulse/HRV estimates are not medically validated and must not be used for diagnosis or treatment. Personal baseline rules need at least three readings; the experimental browser-based pattern model needs at least 30 labeled readings with both urge and calm examples.
 
 ## 📁 Project Structure
 

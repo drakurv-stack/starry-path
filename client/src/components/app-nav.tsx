@@ -1,5 +1,6 @@
 import {
   BookOpen,
+  Activity,
   Home as HomeIcon,
   Leaf,
   MessageCircle,
@@ -13,6 +14,7 @@ const items = [
   { href: "/coach", label: "Coach", icon: MessageCircle },
   { href: "/learn", label: "Learn", icon: BookOpen },
   { href: "/community", label: "Community", icon: Users },
+  { href: "/urge-watch", label: "Urges", icon: Activity },
 ];
 
 export function AppNav() {
@@ -23,7 +25,7 @@ export function AppNav() {
       aria-label="Primary navigation"
       className="fixed bottom-4 left-1/2 z-40 w-[calc(100%-2rem)] max-w-[388px] -translate-x-1/2 rounded-2xl border border-border bg-card p-2 elevation-2"
     >
-      <div className="grid grid-cols-5 gap-1">
+      <div className="grid grid-cols-6 gap-1">
         {items.map(({ href, label, icon: Icon }) => {
           const active = location === href || location.startsWith(`${href}/`);
           return (

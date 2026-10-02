@@ -290,7 +290,7 @@ export default function Home() {
                     className={`min-tap flex-1 rounded-xl border px-5 py-3.5 text-sm font-semibold transition-colors btn-press ${
                       doneToday
                         ? "border-border bg-secondary text-muted-foreground"
-                        : "border-primary bg-primary text-primary-foreground hover:bg-primary/90"
+                        : "border-primary bg-primary text-primary-foreground hover:border-[#3f6250] hover:bg-[#3f6250]"
                     }`}
                     onClick={markTodayComplete}
                     disabled={doneToday}
@@ -493,6 +493,21 @@ export default function Home() {
                 </div>
                 <div className="mt-1 text-sm text-muted-foreground" data-testid="text-daily-checkin-body">
                   {doneToday ? "See your summary" : "Reflect and reset"}
+                </div>
+              </button>
+
+              <button
+                type="button"
+                className="group rounded-2xl border border-border bg-card p-5 text-left transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:bg-secondary btn-press min-tap"
+                onClick={() => navigate("/urge-watch")}
+                data-testid="button-urge-watch"
+              >
+                <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#f3eadc] text-[#79522f]">
+                  <Activity className="h-5 w-5" aria-hidden="true" />
+                </div>
+                <div className="mt-5 text-base font-semibold tracking-tight">UrgeWatch</div>
+                <div className="mt-1 text-sm text-muted-foreground">
+                  Notice personal patterns
                 </div>
               </button>
 

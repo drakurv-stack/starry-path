@@ -14,6 +14,7 @@ import LearnLibrary from "@/pages/learn/index";
 import LessonDetail from "@/pages/learn/lesson";
 import CommunityPage from "@/pages/community/index";
 import DailyCheckin from "@/pages/daily/index";
+import UrgeWatch from "@/pages/urge-watch";
 import PanicButton from "@/pages/panic/index";
 import FocusButton from "@/pages/focus";
 import FocusAnalytics from "@/pages/focus-analytics";
@@ -34,6 +35,7 @@ function Router() {
       <Route path="/learn/:lessonId" component={LessonDetail} />
       <Route path="/community" component={CommunityPage} />
       <Route path="/daily" component={DailyCheckin} />
+      <Route path="/urge-watch" component={UrgeWatch} />
       <Route path="/panic" component={PanicButton} />
       <Route path="/focus" component={FocusButton} />
       <Route path="/focus-analytics" component={FocusAnalytics} />
