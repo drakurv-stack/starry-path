@@ -24,12 +24,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { apiRequest } from "@/lib/queryClient";
+import { MovementChallenge } from "@/components/movement-challenge";
+import { REQUIRED_PLANK_SECONDS, REQUIRED_PUSHUPS } from "@shared/movement";
 
 const CHECKINS_KEY = "orbit:checkins_v1";
 const STREAK_KEY = "orbit:streak";
 const ORBS_KEY = "orbit:orbs";
 const LAST_DONE_KEY = "orbit:lastDone";
 const FREE_SINCE_KEY = "orbit:freeSince";
+const MOVEMENT_DONE_KEY = "orbit:movementDoneDate";
 
 const TRIGGERS = [
   { id: "stress", label: "Stress", icon: "😰" },
@@ -51,14 +55,16 @@ function todayKey() {
 
 export default function DailyCheckin() {
   const [, navigate] = useLocation();
-  const [step, setStep] = useState(0); // 0: mood, 1: urge, 2: triggers, 3: wins/relapse, 4: summary
+  const [step, setStep] = useState(0); // 0: mood, 1: urge, 2: triggers, 3: wins/relapse, 4: movement, 5: summary
   const [mood, setMood] = useState<number | null>(null);
   const [urge, setUrge] = useState(0);
   const [selectedTriggers, setSelectedTriggers] = useState<string[]>([]);
   const [selectedWins, setSelectedWins] = useState<string[]>([]);
   const [relapsed, setRelapsed] = useState(false);
   const [note, setNote] = useState("");
+  const [movementComplete, setMovementComplete] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const handleToggleTrigger = (id: string) => {
     setSelectedTriggers(prev => prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]);
@@ -68,9 +74,11 @@ export default function DailyCheckin() {
     setSelectedWins(prev => prev.includes(win) ? prev.filter(w => w !== win) : [...prev, win]);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (!movementComplete || isSubmitting) return;
     setIsSubmitting(true);
-    setTimeout(() => {
+    await new Promise((resolve) => window.setTimeout(resolve, 1200));
+    try {
       const checkin = {
         id: Math.random().toString(36).substring(7),
         dateISO: new Date().toISOString(),
@@ -79,33 +87,61 @@ export default function DailyCheckin() {
         triggers: selectedTriggers,
         wins: selectedWins,
         relapseBool: relapsed,
-        note
+        note,
+        movementChallenge: {
+          pushups: REQUIRED_PUSHUPS,
+          plankSeconds: REQUIRED_PLANK_SECONDS,
+        },
       };
 
       // Save checkin
       const raw = localStorage.getItem(CHECKINS_KEY);
       const allCheckins = raw ? JSON.parse(raw) : [];
       localStorage.setItem(CHECKINS_KEY, JSON.stringify([checkin, ...allCheckins]));
+      localStorage.setItem(MOVEMENT_DONE_KEY, todayKey());
 
-      // Update streak and orbs
+      const response = await apiRequest("POST", "/api/daily-logs", {
+        logDate: todayKey(),
+        status: relapsed ? "slipped" : "completed",
+        details: {
+          mood,
+          urge,
+          triggers: selectedTriggers,
+          wins: selectedWins,
+          note: note || null,
+          movementChallenge: {
+            pushups: REQUIRED_PUSHUPS,
+            plankSeconds: REQUIRED_PLANK_SECONDS,
+          },
+        },
+      });
+      const saved = await response.json();
+      localStorage.setItem(STREAK_KEY, String(saved.user.streak));
+      localStorage.setItem(ORBS_KEY, String(saved.user.orbs));
+      if (saved.user.free_since) {
+        localStorage.setItem(FREE_SINCE_KEY, saved.user.free_since);
+      }
+      if (relapsed) localStorage.removeItem(LAST_DONE_KEY);
+      else localStorage.setItem(LAST_DONE_KEY, todayKey());
+      setSubmitError("");
+    } catch {
       const streak = Number(localStorage.getItem(STREAK_KEY) || 0);
       const orbs = Number(localStorage.getItem(ORBS_KEY) || 0);
-
       if (relapsed) {
         localStorage.setItem(STREAK_KEY, "0");
+        localStorage.setItem(ORBS_KEY, String(Math.max(0, orbs - 5)));
         localStorage.setItem(FREE_SINCE_KEY, new Date().toISOString());
-      } else {
-        const lastDone = localStorage.getItem(LAST_DONE_KEY);
-        if (lastDone !== todayKey()) {
-          localStorage.setItem(STREAK_KEY, String(streak + 1));
-          localStorage.setItem(ORBS_KEY, String(orbs + 5));
-          localStorage.setItem(LAST_DONE_KEY, todayKey());
-        }
+        localStorage.removeItem(LAST_DONE_KEY);
+      } else if (localStorage.getItem(LAST_DONE_KEY) !== todayKey()) {
+        localStorage.setItem(STREAK_KEY, String(streak + 1));
+        localStorage.setItem(ORBS_KEY, String(orbs + 5));
+        localStorage.setItem(LAST_DONE_KEY, todayKey());
       }
-
+      setSubmitError("This check-in is saved on this device only; database sync failed.");
+    } finally {
       setIsSubmitting(false);
-      setStep(4);
-    }, 1200);
+      setStep(5);
+    }
   };
 
   return (
@@ -136,9 +172,9 @@ export default function DailyCheckin() {
           </div>
         </header>
 
-        {step < 4 && (
+        {step < 5 && (
           <div className="flex justify-center gap-2 mb-10 px-6">
-            {[0, 1, 2, 3].map((i) => (
+            {[0, 1, 2, 3, 4].map((i) => (
               <motion.div 
                 key={i}
                 animate={{ 
@@ -295,6 +331,7 @@ export default function DailyCheckin() {
                   <textarea
                     placeholder="Briefly observe your thoughts..."
                     value={note}
+                    maxLength={2000}
                     onChange={(e) => setNote(e.target.value)}
                     className="w-full h-32 bg-white/5 border border-white/10 rounded-[1.5rem] p-5 text-[15px] text-white placeholder:text-white/10 focus:outline-none focus:ring-1 focus:ring-white/20 transition-all resize-none shadow-inner"
                   />
@@ -371,25 +408,61 @@ export default function DailyCheckin() {
 
                 <div className="pt-4">
                   <Button 
-                    disabled={isSubmitting}
-                    onClick={handleSubmit}
+                    onClick={() => setStep(4)}
                     className="w-full grad-pill h-16 rounded-[1.5rem] font-black text-lg shadow-[0_20px_40px_rgba(6,182,212,0.3)] transition-all active:scale-[0.98] border border-white/20 text-white"
                   >
-                    {isSubmitting ? (
-                      <span className="flex items-center gap-3">
-                         <Activity className="h-5 w-5 animate-spin" /> Transmitting Log...
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-2">
-                        Complete Synchronization <CheckCircle2 className="h-6 w-6 opacity-50" />
-                      </span>
-                    )}
+                    <span className="flex items-center gap-2">
+                      Continue to required movement <ChevronRight className="h-5 w-5 opacity-50" />
+                    </span>
                   </Button>
                 </div>
               </motion.div>
             )}
 
             {step === 4 && (
+              <motion.div
+                key="movement"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="space-y-5"
+              >
+                <div className="text-center">
+                  <h1 className="text-3xl font-bold text-white font-[var(--font-serif)] tracking-tight">
+                    One last step
+                  </h1>
+                  <p className="mt-2 text-sm leading-6 text-white/45">
+                    The daily check-in stays incomplete until the camera verifies both exercises.
+                  </p>
+                </div>
+
+                <MovementChallenge onComplete={() => setMovementComplete(true)} />
+
+                <Button
+                  type="button"
+                  onClick={() => void handleSubmit()}
+                  disabled={!movementComplete || isSubmitting}
+                  className="w-full grad-pill h-16 rounded-[1.5rem] border border-white/20 text-lg font-black text-white disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {isSubmitting ? (
+                    <span className="flex items-center gap-3">
+                      <Activity className="h-5 w-5 animate-spin" /> Saving check-in…
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      Complete Daily Ritual <CheckCircle2 className="h-5 w-5 opacity-60" />
+                    </span>
+                  )}
+                </Button>
+                {!movementComplete && (
+                  <p className="text-center text-xs text-white/35" aria-live="polite">
+                    Finish {REQUIRED_PUSHUPS} verified push-ups and a {REQUIRED_PLANK_SECONDS}-second verified plank to continue.
+                  </p>
+                )}
+              </motion.div>
+            )}
+
+            {step === 5 && (
               <motion.div
                 key="summary"
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -416,6 +489,15 @@ export default function DailyCheckin() {
                       ? "A slip is merely a course correction. Your trajectory remains upward. Resetting orbit now."
                       : "The habit loop weakens. Your intentional presence is the ultimate weapon."}
                   </p>
+                  {submitError ? (
+                    <p
+                      className="mx-4 rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-xs leading-5 text-amber-200"
+                      role="status"
+                      data-testid="text-daily-sync-error"
+                    >
+                      {submitError}
+                    </p>
+                  ) : null}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 pt-4 px-2">

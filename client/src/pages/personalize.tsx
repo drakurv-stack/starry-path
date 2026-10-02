@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { apiRequest } from "@/lib/queryClient";
 
 const ONBOARDING_KEY = "orbit:onboarding";
 const PROFILE_KEY = "orbit:profile";
@@ -488,8 +489,16 @@ export default function Personalize() {
               <button
                 type="button"
                 className="grad-pill shine w-full rounded-full px-5 py-4 text-[15px] font-semibold text-white transition active:scale-[0.99]"
-                onClick={() => {
+                onClick={async () => {
                   saveProfile({ seedName: "Origin Seed", signaturePreview });
+                  try {
+                    await apiRequest("PATCH", "/api/profile", {
+                      name,
+                      personalNote: signaturePreview,
+                    });
+                  } catch {
+                    // Keep the local profile so onboarding can continue offline.
+                  }
                   navigate("/results");
                 }}
                 data-testid="button-commit"

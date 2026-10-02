@@ -11,7 +11,9 @@ import {
 } from "lucide-react";
 import { AppNav } from "@/components/app-nav";
 import { OrbitLogo } from "@/components/orbit-logo";
+import { AccountabilityPanel } from "@/components/accountability-panel";
 import { Button } from "@/components/ui/button";
+import { apiRequest } from "@/lib/queryClient";
 import {
   Dialog,
   DialogContent,
@@ -95,6 +97,21 @@ export default function Settings() {
   }, []);
 
   useEffect(() => {
+    fetch("/api/profile", { credentials: "include" })
+      .then((response) => (response.ok ? response.json() : Promise.reject(new Error("Profile unavailable"))))
+      .then((savedProfile) => {
+        setProfile((current) => ({
+          ...current,
+          dnsProtectionEnabled: savedProfile.shield_status === true,
+          signaturePreview: savedProfile.personal_note ?? current.signaturePreview,
+        }));
+      })
+      .catch(() => {
+        // The local profile remains available if the database cannot be reached.
+      });
+  }, []);
+
+  useEffect(() => {
     function handleVisibilityChange() {
       if (
         document.visibilityState === "visible" &&
@@ -113,6 +130,9 @@ export default function Settings() {
     const nextProfile = { ...profile, dnsProtectionEnabled: enabled };
     setProfile(nextProfile);
     saveProfile(nextProfile);
+    void apiRequest("PATCH", "/api/profile", { shieldStatus: enabled }).catch(() => {
+      // Keep the local state; the server value will be reloaded on the next visit.
+    });
   }
 
   function openDeviceSettings() {
@@ -283,6 +303,7 @@ export default function Settings() {
               </Button>
             </div>
           </section>
+          <AccountabilityPanel />
         </div>
       </main>
       <AppNav />

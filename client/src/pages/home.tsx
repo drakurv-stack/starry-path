@@ -22,6 +22,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { AppNav } from "@/components/app-nav";
 import { useContentShield } from "@/lib/content-shield";
 import { OrbitLogo } from "@/components/orbit-logo";
+import { apiRequest } from "@/lib/queryClient";
+import { REQUIRED_PLANK_SECONDS, REQUIRED_PUSHUPS } from "@shared/movement";
 
 const ONBOARDING_KEY = "orbit:onboarding";
 const PROFILE_KEY = "orbit:profile";
@@ -29,6 +31,7 @@ const STREAK_KEY = "orbit:streak";
 const ORBS_KEY = "orbit:orbs";
 const FREE_SINCE_KEY = "orbit:freeSince";
 const LAST_DONE_KEY = "orbit:lastDone";
+const MOVEMENT_DONE_KEY = "orbit:movementDoneDate";
 
 function safeNumber(v: string | null, fallback = 0) {
   const n = Number(v);
@@ -81,6 +84,8 @@ export default function Home() {
   const [orbs, setOrbs] = useState(0);
   const [freeSince, setFreeSince] = useState<string | null>(null);
   const [lastDone, setLastDone] = useState<string | null>(null);
+  const [personalNote, setPersonalNote] = useState(signaturePreview);
+  const [persistenceError, setPersistenceError] = useState("");
   const [nextLesson, setNextLesson] = useState("Dopamine & the Habit Loop");
   const [panicStats, setPanicStats] = useState({ urgesResisted: 0 });
   const [focusStats, setFocusStats] = useState({ distractionsResisted: 0, totalFocusMinutes: 0 });
@@ -90,7 +95,10 @@ export default function Home() {
     const s = safeNumber(localStorage.getItem(STREAK_KEY), 0);
     const o = safeNumber(localStorage.getItem(ORBS_KEY), 0);
     const fs = localStorage.getItem(FREE_SINCE_KEY);
-    const ld = localStorage.getItem(LAST_DONE_KEY);
+    const lastDoneFromStorage = localStorage.getItem(LAST_DONE_KEY);
+    const movementDoneFromStorage = localStorage.getItem(MOVEMENT_DONE_KEY) === todayKey();
+    const ld = movementDoneFromStorage ? lastDoneFromStorage : null;
+    if (!movementDoneFromStorage) localStorage.removeItem(LAST_DONE_KEY);
 
     // Panic stats
     try {
@@ -133,40 +141,64 @@ export default function Home() {
     setLastDone(ld);
   }, []);
 
+  useEffect(() => {
+    void (async () => {
+      const profileResponse = await fetch("/api/profile", { credentials: "include" });
+      if (!profileResponse.ok) throw new Error("Profile could not be loaded");
+      const savedProfile = await profileResponse.json();
+      const [logsResponse] = await Promise.all([
+        fetch("/api/daily-logs", { credentials: "include" }),
+        apiRequest("PATCH", "/api/profile", { name }),
+      ]);
+      if (!logsResponse.ok) throw new Error("Daily logs could not be loaded");
+      const logs = (await logsResponse.json()) as Array<{
+        log_date: string;
+        status: "completed" | "slipped";
+        details?: {
+          movementChallenge?: { pushups: number; plankSeconds: number };
+        };
+      }>;
+      const todayLog = logs.find(
+        (log) =>
+          log.log_date === todayKey() &&
+          log.status === "completed" &&
+          (log.details?.movementChallenge?.pushups ?? 0) >= REQUIRED_PUSHUPS &&
+          (log.details?.movementChallenge?.plankSeconds ?? 0) >= REQUIRED_PLANK_SECONDS,
+      );
+      const savedStreak = Number(savedProfile.streak) || 0;
+      const savedOrbs = Number(savedProfile.orbs) || 0;
+      setStreak(savedStreak);
+      setOrbs(savedOrbs);
+      setFreeSince(savedProfile.free_since || localStorage.getItem(FREE_SINCE_KEY));
+      setPersonalNote(savedProfile.personal_note ?? signaturePreview);
+      setLastDone(todayLog ? todayKey() : null);
+      localStorage.setItem(STREAK_KEY, String(savedStreak));
+      localStorage.setItem(ORBS_KEY, String(savedOrbs));
+      if (savedProfile.free_since) {
+        localStorage.setItem(FREE_SINCE_KEY, savedProfile.free_since);
+      }
+      if (todayLog) {
+        localStorage.setItem(LAST_DONE_KEY, todayKey());
+        localStorage.setItem(MOVEMENT_DONE_KEY, todayKey());
+      } else {
+        localStorage.removeItem(LAST_DONE_KEY);
+        localStorage.removeItem(MOVEMENT_DONE_KEY);
+      }
+      setPersistenceError("");
+    })().catch(() => {
+      setPersistenceError("Showing saved on this device; database sync is unavailable.");
+    });
+  }, [name, signaturePreview]);
+
   const doneToday = lastDone === todayKey();
 
   function markTodayComplete() {
-    const tk = todayKey();
-    if (lastDone === tk) return;
-
-    const nextStreak = streak + 1;
-    const nextOrbs = orbs + 3;
-
-    setStreak(nextStreak);
-    setOrbs(nextOrbs);
-    setLastDone(tk);
-
-    localStorage.setItem(STREAK_KEY, String(nextStreak));
-    localStorage.setItem(ORBS_KEY, String(nextOrbs));
-    localStorage.setItem(LAST_DONE_KEY, tk);
-
-    if (!localStorage.getItem(FREE_SINCE_KEY)) {
-      localStorage.setItem(FREE_SINCE_KEY, new Date().toISOString());
-      setFreeSince(localStorage.getItem(FREE_SINCE_KEY));
-    }
+    if (lastDone === todayKey()) return;
+    navigate("/daily");
   }
 
   function relapseReset() {
-    setStreak(0);
-    const nextOrbs = Math.max(0, orbs - 5);
-    setOrbs(nextOrbs);
-    setLastDone(null);
-
-    localStorage.setItem(STREAK_KEY, "0");
-    localStorage.setItem(ORBS_KEY, String(nextOrbs));
-    localStorage.removeItem(LAST_DONE_KEY);
-    localStorage.setItem(FREE_SINCE_KEY, new Date().toISOString());
-    setFreeSince(localStorage.getItem(FREE_SINCE_KEY));
+    navigate("/daily");
   }
 
   return (
@@ -295,7 +327,9 @@ export default function Home() {
                     disabled={doneToday}
                     data-testid="button-mark-today-complete"
                   >
-                    {doneToday ? "Today complete" : "Mark today complete"}
+                    {doneToday
+                      ? "Today complete"
+                      : "Start daily ritual"}
                   </button>
                   <button
                     type="button"
@@ -303,9 +337,18 @@ export default function Home() {
                     onClick={relapseReset}
                     data-testid="button-relapse-reset"
                   >
-                    I slipped — reset streak
+                    Report a slip
                   </button>
                 </div>
+                {persistenceError ? (
+                  <p
+                    className="mt-3 text-xs text-amber-700"
+                    role="status"
+                    data-testid="text-persistence-status"
+                  >
+                    {persistenceError}
+                  </p>
+                ) : null}
 
                 <div
                   className="mt-8 rounded-2xl border border-border bg-background p-4"
@@ -321,7 +364,7 @@ export default function Home() {
                     className="mt-3 min-h-[44px] rounded-xl border border-border bg-card px-3 py-2 font-[var(--font-scribble)] text-lg text-foreground"
                     data-testid="text-signature-preview"
                   >
-                    {signaturePreview || "Add a note during setup"}
+                    {personalNote || "Add a note during setup"}
                   </div>
                 </div>
 
@@ -581,6 +624,7 @@ export default function Home() {
                   localStorage.removeItem(ORBS_KEY);
                   localStorage.removeItem(FREE_SINCE_KEY);
                   localStorage.removeItem(LAST_DONE_KEY);
+                  localStorage.removeItem(MOVEMENT_DONE_KEY);
                   navigate("/welcome");
                 }}
                 data-testid="button-reset-all"

@@ -21,6 +21,7 @@ import FocusAnalytics from "@/pages/focus-analytics";
 import SeedGarden from "@/pages/garden/index";
 import GrowthTimeline from "@/pages/garden/timeline";
 import Settings from "@/pages/settings";
+import PartnerPortal from "@/pages/partner-portal";
 
 function Router() {
   return (
@@ -42,6 +43,7 @@ function Router() {
       <Route path="/garden" component={SeedGarden} />
       <Route path="/timeline" component={GrowthTimeline} />
       <Route path="/settings" component={Settings} />
+      <Route path="/partner/:inviteCode" component={PartnerPortal} />
 
       <Route component={NotFound} />
     </Switch>

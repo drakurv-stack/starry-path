@@ -1,0 +1,1 @@
+- [Partner access boundary](partner-access-boundary.md) — invite links are bearer credentials in the mock-auth MVP; require verified accounts before production approvals.
