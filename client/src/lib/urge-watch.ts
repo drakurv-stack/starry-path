@@ -300,19 +300,84 @@ function populationStandardDeviation(values: number[]) {
   return Math.sqrt(values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / values.length);
 }
 
+export function estimateVitalLensLiveBpm(samples: RedSample[]): number | null {
+  const ordered = [...samples].sort((a, b) => a.timeMs - b.timeMs);
+  const lastTime = ordered[ordered.length - 1]?.timeMs;
+  if (lastTime === undefined) return null;
+
+  const recent = ordered.filter((sample) => sample.timeMs >= lastTime - 12_000);
+  if (recent.length < 80 || recent[recent.length - 1].timeMs - recent[0].timeMs < 8_000) return null;
+
+  const sampleRate = 20;
+  const firstTime = recent[0].timeMs;
+  const count = Math.floor(((lastTime - firstTime) / 1000) * sampleRate);
+  if (count < sampleRate * 8) return null;
+
+  const resampled: number[] = [];
+  let sourceIndex = 0;
+  for (let index = 0; index < count; index++) {
+    const timeMs = firstTime + (index / sampleRate) * 1000;
+    while (sourceIndex < recent.length - 2 && recent[sourceIndex + 1].timeMs < timeMs) sourceIndex++;
+    const left = recent[sourceIndex];
+    const right = recent[Math.min(sourceIndex + 1, recent.length - 1)];
+    const span = right.timeMs - left.timeMs;
+    const fraction = span > 0 ? (timeMs - left.timeMs) / span : 0;
+    resampled.push(left.red + (right.red - left.red) * fraction);
+  }
+
+  const centered = resampled.map((value) => value - average(resampled));
+  const filtered = biquad(biquad(centered, sampleRate, "highpass", 0.7), sampleRate, "lowpass", 3.5);
+  if (populationStandardDeviation(filtered) < 1e-5) return null;
+
+  const minLag = Math.floor((sampleRate * 60) / 180);
+  const maxLag = Math.ceil((sampleRate * 60) / 45);
+  const correlations: number[] = [];
+  for (let lag = minLag - 1; lag <= maxLag + 1; lag++) {
+    let product = 0;
+    let leftEnergy = 0;
+    let rightEnergy = 0;
+    for (let index = lag; index < filtered.length; index++) {
+      const left = filtered[index];
+      const right = filtered[index - lag];
+      product += left * right;
+      leftEnergy += left ** 2;
+      rightEnergy += right ** 2;
+    }
+    correlations.push(product / Math.sqrt(leftEnergy * rightEnergy || 1));
+  }
+
+  let bestIndex = 0;
+  for (let index = 1; index < correlations.length; index++) {
+    if (correlations[index] > correlations[bestIndex]) bestIndex = index;
+  }
+  const bestCorrelation = correlations[bestIndex];
+  if (bestCorrelation < 0.35) return null;
+
+  const lag = minLag - 1 + bestIndex;
+  const left = correlations[bestIndex - 1] ?? bestCorrelation;
+  const right = correlations[bestIndex + 1] ?? bestCorrelation;
+  const curvature = left - 2 * bestCorrelation + right;
+  const adjustment = Math.abs(curvature) > 1e-9
+    ? Math.max(-0.5, Math.min(0.5, (0.5 * (left - right)) / curvature))
+    : 0;
+  const bpm = Math.round((60 * sampleRate) / (lag + adjustment));
+  return bpm >= 45 && bpm <= 180 ? bpm : null;
+}
+
 /**
  * Browser-local adaptation of VitalLens' POS method. RGB traces are sampled
  * from the guided face region, normalized in 48-frame windows, projected,
- * overlap-averaged, and passed to Orbit's existing pulse-quality check.
+ * overlap-averaged, then checked with Orbit's peak quality test or a live POS
+ * autocorrelation estimate for shorter streaming windows.
  */
 export function estimateVitalLensPos(samples: RgbSample[], captureDurationSeconds: number): SignalEstimate {
   const ordered = [...samples].sort((a, b) => a.timeMs - b.timeMs);
-  if (ordered.length < 256 || captureDurationSeconds < 40) {
+  if (ordered.length < 160 || captureDurationSeconds < 8) {
     return {
       bpm: 0,
       hrvMs: 0,
       quality: "noisy",
-      reason: "VitalLens POS needs a steady face capture of at least 40 seconds.",
+      reason: "VitalLens POS needs at least eight seconds of detected face signal.",
     };
   }
 
@@ -385,6 +450,15 @@ export function estimateVitalLensPos(samples: RgbSample[], captureDurationSecond
   });
   const estimate = estimatePulse(waveformSamples, captureDurationSeconds);
   if (estimate.quality === "good") return estimate;
+  const liveBpm = estimateVitalLensLiveBpm(waveformSamples);
+  if (liveBpm !== null) {
+    return {
+      bpm: liveBpm,
+      hrvMs: 0,
+      quality: "good",
+      reason: "VitalLens POS live pulse-frequency estimate from the recent face signal.",
+    };
+  }
   return {
     ...estimate,
     reason: estimate.reason.includes("faint")
