@@ -383,7 +383,16 @@ export function estimateVitalLensPos(samples: RgbSample[], captureDurationSecond
       red: (signal[index] / coverage[index]) * 100,
     }];
   });
-  return estimatePulse(waveformSamples, captureDurationSeconds);
+  const estimate = estimatePulse(waveformSamples, captureDurationSeconds);
+  if (estimate.quality === "good") return estimate;
+  return {
+    ...estimate,
+    reason: estimate.reason.includes("faint")
+      ? "The face color signal was too faint. Use even lighting, center your face, and try again."
+      : estimate.reason.includes("Movement")
+        ? "Movement or uneven lighting affected the face signal. Stay still and try again."
+        : "The face-camera signal was interrupted. Keep your face inside the guide and retry.",
+  };
 }
 
 export function summarizeMotion(index: number | null): MotionLevel {
@@ -691,6 +700,10 @@ export function buildUrgeCsv(dataset: UrgeDataset) {
     "ppgbetter_bpm",
     "ppgbetter_peak_count_last_10s",
     "reference_bpm",
+    "capture_mode",
+    "vitallens_pos_bpm",
+    "vitallens_pos_signal_quality",
+    "vitallens_pos_reason",
   ];
   const rows = dataset.labels.map((event) => {
     const reading = dataset.readings.find((item) => item.id === event.readingId);
@@ -705,6 +718,10 @@ export function buildUrgeCsv(dataset: UrgeDataset) {
       reading?.motionIndex ?? null,
       reading?.sleepHours ?? null,
       reading?.sleepQuality ?? null,
+      null,
+      null,
+      null,
+      null,
       null,
       null,
       null,
@@ -730,6 +747,10 @@ export function buildUrgeCsv(dataset: UrgeDataset) {
       null,
       null,
       null,
+      null,
+      null,
+      null,
+      null,
     ].map(quote).join(","));
   });
   dataset.comparisons.forEach((comparison) => {
@@ -749,6 +770,10 @@ export function buildUrgeCsv(dataset: UrgeDataset) {
       comparison.ppgBetterBpm,
       comparison.ppgBetterPeakCount,
       comparison.referenceBpm,
+      comparison.captureMode ?? "finger",
+      comparison.vitalLensPosBpm ?? null,
+      comparison.vitalLensPosQuality ?? null,
+      comparison.vitalLensPosReason ?? null,
     ].map(quote).join(","));
   });
   return [header.map(quote).join(","), ...rows].join("\r\n");

@@ -318,14 +318,16 @@ export default function UrgeWatch() {
     return true;
   }, []);
 
-  const finishCapture = useCallback(() => {
+  const finishCapture = useCallback((mode: CaptureMode) => {
     if (!activeRef.current) return;
     activeRef.current = false;
     const capturedSamples = samplesRef.current;
     const capturedBrightnessSamples = brightnessSamplesRef.current;
+    const capturedRgbSamples = rgbSamplesRef.current;
     const capturedMotionDeltas = motionDeltasRef.current;
     samplesRef.current = [];
     brightnessSamplesRef.current = [];
+    rgbSamplesRef.current = [];
     motionDeltasRef.current = [];
     const duration = (performance.now() - startedAtRef.current) / 1000;
     releaseSensors();
@@ -336,26 +338,31 @@ export default function UrgeWatch() {
 
     const orbitEstimate = estimatePulse(capturedSamples, duration);
     const ppgBetterEstimate = estimatePpgBetter(capturedBrightnessSamples);
+    const vitalLensEstimate = mode === "face" ? estimateVitalLensPos(capturedRgbSamples, duration) : null;
     const recordedAt = new Date().toISOString();
     const comparison: EstimatorComparison = {
       id: newId(),
       recordedAt,
+      captureMode: mode,
       orbitBpm: orbitEstimate.quality === "good" ? orbitEstimate.bpm : null,
       orbitQuality: orbitEstimate.quality,
       ppgBetterBpm: ppgBetterEstimate.bpm,
       ppgBetterPeakCount: ppgBetterEstimate.peakCount,
       ppgBetterReason: ppgBetterEstimate.reason,
+      vitalLensPosBpm: vitalLensEstimate?.quality === "good" ? vitalLensEstimate.bpm : null,
+      vitalLensPosQuality: vitalLensEstimate?.quality ?? null,
+      vitalLensPosReason: vitalLensEstimate?.reason ?? "VitalLens POS runs only on face captures.",
       referenceBpm: null,
     };
     const difference = comparison.orbitBpm !== null && comparison.ppgBetterBpm !== null
       ? Math.abs(comparison.orbitBpm - comparison.ppgBetterBpm)
       : null;
-    const resultText = `Same-capture comparison — Orbit: ${comparison.orbitBpm === null ? "no estimate" : `${comparison.orbitBpm} BPM`}; PPGbetter: ${comparison.ppgBetterBpm === null ? "no estimate" : `${comparison.ppgBetterBpm} BPM`}${difference === null ? "" : `; gap ${difference} BPM`}.`;
+    const resultText = `Same-capture ${mode === "face" ? "face" : "fingertip"} comparison — Orbit: ${comparison.orbitBpm === null ? "no estimate" : `${comparison.orbitBpm} BPM`}; PPGbetter: ${comparison.ppgBetterBpm === null ? "no estimate" : `${comparison.ppgBetterBpm} BPM`}${mode === "face" ? `; VitalLens POS: ${comparison.vitalLensPosBpm === null ? "no estimate" : `${comparison.vitalLensPosBpm} BPM`}` : ""}${difference === null ? "" : `; Orbit/PPGbetter gap ${difference} BPM`}.`;
     const motionIndex = capturedMotionDeltas.length
       ? Math.sqrt(capturedMotionDeltas.reduce((sum, value) => sum + value ** 2, 0) / capturedMotionDeltas.length)
       : null;
     const motionLevel: MotionLevel = summarizeMotion(motionIndex);
-    const reading: UrgeReading | null = orbitEstimate.quality === "good"
+    const reading: UrgeReading | null = mode === "finger" && orbitEstimate.quality === "good"
       ? {
           id: newId(),
           recordedAt,
@@ -374,28 +381,35 @@ export default function UrgeWatch() {
       readings: reading ? [reading, ...current.readings] : current.readings,
     }));
     setLatestEstimate(resultText);
-    setCameraError(orbitEstimate.quality !== "good" && ppgBetterEstimate.bpm === null
-      ? `Neither method returned a pulse estimate. Orbit: ${orbitEstimate.reason} PPGbetter: ${ppgBetterEstimate.reason}`
+    setCameraError(
+      orbitEstimate.quality !== "good" &&
+      ppgBetterEstimate.bpm === null &&
+      vitalLensEstimate?.quality !== "good"
+      ? `No method returned a pulse estimate. Orbit: ${orbitEstimate.reason} PPGbetter: ${ppgBetterEstimate.reason}${vitalLensEstimate ? ` VitalLens POS: ${vitalLensEstimate.reason}` : ""}`
       : "");
     setSensorNote(reading
       ? motionLevel === "unknown"
         ? "Orbit reading saved. Motion sensors were unavailable; this reading has no motion context."
         : `Orbit reading saved. Motion context: ${motionLevel}.`
-      : "Comparison saved. Orbit did not add this capture to its baseline because its signal was noisy.");
+      : mode === "face"
+        ? "Face comparison saved on this device; it was not added to your fingertip baseline."
+        : "Comparison saved. Orbit did not add this capture to its baseline because its signal was noisy.");
     setLabelSaved("");
   }, [releaseSensors, sleepHours, sleepQuality]);
 
-  const startCapture = useCallback(async () => {
+  const startCapture = useCallback(async (mode: CaptureMode) => {
     if (startPendingRef.current || activeRef.current) return;
-    if (Number.isNaN(Number(sleepHours)) || Number(sleepHours) < 0 || Number(sleepHours) > 12) {
+    if (mode === "finger" && (Number.isNaN(Number(sleepHours)) || Number(sleepHours) < 0 || Number(sleepHours) > 12)) {
       setCameraError("Enter sleep between 0 and 12 hours before starting.");
       return;
     }
-    if (Number.isNaN(Number(sleepQuality)) || Number(sleepQuality) < 1 || Number(sleepQuality) > 5) {
+    if (mode === "finger" && (Number.isNaN(Number(sleepQuality)) || Number(sleepQuality) < 1 || Number(sleepQuality) > 5)) {
       setCameraError("Choose a sleep quality from 1 to 5 before starting.");
       return;
     }
     const captureRun = ++captureRunRef.current;
+    captureModeRef.current = mode;
+    setActiveCaptureMode(mode);
     startPendingRef.current = true;
     setIsStartingCapture(true);
     setCameraError("");
@@ -404,21 +418,25 @@ export default function UrgeWatch() {
     setRemainingSeconds(CAPTURE_SECONDS);
     samplesRef.current = [];
     brightnessSamplesRef.current = [];
+    rgbSamplesRef.current = [];
     motionDeltasRef.current = [];
     previousMotionRef.current = null;
+    lastVideoTimeRef.current = -1;
 
     try {
       let motionGranted = false;
-      try {
-        motionGranted = await requestMotionPermission();
-      } catch {
-        motionGranted = false;
+      if (mode === "finger") {
+        try {
+          motionGranted = await requestMotionPermission();
+        } catch {
+          motionGranted = false;
+        }
       }
       if (captureRun !== captureRunRef.current) {
         releaseSensors();
         return;
       }
-      if (!motionGranted) {
+      if (mode === "finger" && !motionGranted) {
         setSensorNote("Motion permission is unavailable. Pulse capture can continue without it.");
       }
 
@@ -428,7 +446,7 @@ export default function UrgeWatch() {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: false,
         video: {
-          facingMode: { ideal: "environment" },
+          facingMode: mode === "face" ? { exact: "user" } : { ideal: "environment" },
           width: { ideal: 640 },
           height: { ideal: 480 },
           frameRate: { ideal: 30, min: 15 },
@@ -444,7 +462,7 @@ export default function UrgeWatch() {
       let hasTorch = false;
       try {
         const capabilities = track.getCapabilities() as MediaTrackCapabilities & { torch?: boolean };
-        hasTorch = Boolean(capabilities.torch);
+        hasTorch = mode === "finger" && Boolean(capabilities.torch);
         if (hasTorch) {
           await track.applyConstraints({
             advanced: [{ torch: true } as MediaTrackConstraintSet],
@@ -473,7 +491,7 @@ export default function UrgeWatch() {
       startPendingRef.current = false;
       setIsStartingCapture(false);
       setIsCapturing(true);
-      if (!motionGranted) setSensorNote("Motion permission is unavailable. Pulse capture can continue without it.");
+      if (mode === "finger" && !motionGranted) setSensorNote("Motion permission is unavailable. Pulse capture can continue without it.");
 
       const sampleFrame = () => {
         if (!activeRef.current) return;
@@ -488,26 +506,42 @@ export default function UrgeWatch() {
           video.currentTime !== lastVideoTimeRef.current
         ) {
           lastVideoTimeRef.current = video.currentTime;
-          canvas.width = 48;
-          canvas.height = 36;
+          const faceMode = captureModeRef.current === "face";
+          canvas.width = faceMode ? 64 : 48;
+          canvas.height = faceMode ? 48 : 36;
           context.drawImage(video, 0, 0, canvas.width, canvas.height);
           const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
           let redTotal = 0;
+          let greenTotal = 0;
+          let blueTotal = 0;
           let brightnessTotal = 0;
-          const pixelCount = pixels.length / 4;
-          for (let i = 0; i < pixels.length; i += 4) {
-            redTotal += pixels[i];
-            brightnessTotal += pixels[i] * 0.299 + pixels[i + 1] * 0.587 + pixels[i + 2] * 0.114;
+          const xStart = faceMode ? 16 : 0;
+          const xEnd = faceMode ? 48 : canvas.width;
+          const yStart = faceMode ? 8 : 0;
+          const yEnd = faceMode ? 40 : canvas.height;
+          const pixelCount = (xEnd - xStart) * (yEnd - yStart);
+          for (let y = yStart; y < yEnd; y++) {
+            for (let x = xStart; x < xEnd; x++) {
+              const i = (y * canvas.width + x) * 4;
+              redTotal += pixels[i];
+              greenTotal += pixels[i + 1];
+              blueTotal += pixels[i + 2];
+              brightnessTotal += pixels[i] * 0.299 + pixels[i + 1] * 0.587 + pixels[i + 2] * 0.114;
+            }
           }
           const timeMs = performance.now() - startedAtRef.current;
+          const red = redTotal / pixelCount;
+          const green = greenTotal / pixelCount;
+          const blue = blueTotal / pixelCount;
           samplesRef.current.push({
             timeMs,
-            red: redTotal / pixelCount,
+            red,
           });
           brightnessSamplesRef.current.push({
             timeMs,
             brightness: brightnessTotal / pixelCount,
           });
+          if (faceMode) rgbSamplesRef.current.push({ timeMs, red, green, blue });
         }
         frameRef.current = requestAnimationFrame(sampleFrame);
       };
@@ -516,7 +550,7 @@ export default function UrgeWatch() {
         const elapsed = (performance.now() - startedAtRef.current) / 1000;
         const remaining = Math.max(0, Math.ceil(CAPTURE_SECONDS - elapsed));
         setRemainingSeconds(remaining);
-        if (elapsed >= CAPTURE_SECONDS) finishCapture();
+        if (elapsed >= CAPTURE_SECONDS) finishCapture(mode);
       }, 200);
     } catch (error) {
       if (captureRun !== captureRunRef.current) {
@@ -529,7 +563,10 @@ export default function UrgeWatch() {
       setIsCapturing(false);
       setTorchEnabled(false);
       const detail = error instanceof Error ? error.message : "Camera access was not available.";
-      setCameraError(detail.includes("Permission") || detail.includes("NotAllowed")
+      const errorName = error instanceof Error ? error.name : "";
+      setCameraError(mode === "face" && ["OverconstrainedError", "NotFoundError"].includes(errorName)
+        ? "A front-facing camera is not available on this device. Choose fingertip mode or try a device with a front camera."
+        : detail.includes("Permission") || detail.includes("NotAllowed")
         ? "Camera access was blocked. Allow camera access in your browser settings, then try again."
         : detail);
     }
@@ -669,19 +706,26 @@ export default function UrgeWatch() {
                 </div>
               </div>
 
-              <div className="mt-5 overflow-hidden rounded-2xl border border-border bg-[#222520]">
+              <div className={`relative mx-auto mt-5 w-full overflow-hidden rounded-2xl border border-border bg-[#222520] ${activeCaptureMode === "face" ? "max-w-[320px]" : ""}`}>
                 <video
                   ref={videoRef}
-                  className={`aspect-video max-h-60 w-full object-cover ${isCapturing ? "block" : "hidden"}`}
+                  className={`w-full object-cover ${activeCaptureMode === "face" ? "aspect-[4/3]" : "aspect-video max-h-60"} ${isCapturing ? "block" : "hidden"}`}
                   muted
                   playsInline
-                  aria-label="Live rear camera preview for fingertip pulse capture"
+                  aria-label={activeCaptureMode === "face" ? "Live front camera preview for face pulse comparison" : "Live rear camera preview for fingertip pulse capture"}
                 />
+                {isCapturing && activeCaptureMode === "face" && (
+                  <div className="pointer-events-none absolute inset-0 grid place-items-center" aria-hidden="true">
+                    <div className="h-2/3 w-1/2 rounded-[42%] border-2 border-dashed border-white/80 shadow-[0_0_0_999px_rgba(0,0,0,0.16)]" />
+                  </div>
+                )}
                 {!isCapturing && (
                   <div className="grid aspect-[16/7] min-h-32 place-items-center px-6 text-center text-sm text-[#ffffff]">
                     <div>
                       <Camera className="mx-auto mb-2 h-6 w-6 text-white/70" aria-hidden="true" />
-                    Rear camera stays off until you start a check-in.
+                      {activeCaptureMode === "face"
+                        ? "Front camera stays off until you start a face comparison."
+                        : "Rear camera stays off until you start a fingertip check-in."}
                     </div>
                   </div>
                 )}
@@ -689,14 +733,21 @@ export default function UrgeWatch() {
               <canvas ref={canvasRef} className="hidden" aria-hidden="true" />
 
               <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-                Sit still, cover the rear camera lens and flash with your fingertip, and keep gentle pressure for the full reading.
+                {activeCaptureMode === "face"
+                  ? "For a face comparison, center your face in the guide and stay still. The front-camera color signal is processed here and never uploaded."
+                  : "For a fingertip check-in, sit still, cover the rear camera lens and flash with your fingertip, and keep gentle pressure for the full reading."}
               </p>
-              {torchEnabled && (
+              {activeCaptureMode === "face" && !isCapturing && (
+                <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                  Face mode uses a browser-local port of VitalLens POS on the same face-region frames as Orbit and PPGbetter. It is a comparison only and is not added to your fingertip baseline.
+                </p>
+              )}
+              {activeCaptureMode === "finger" && torchEnabled && (
                 <p className="mt-2 inline-flex items-center gap-2 text-xs font-medium text-primary">
                   <Check className="h-4 w-4" aria-hidden="true" /> Camera light enabled
                 </p>
               )}
-              {isCapturing && !torchEnabled && (
+              {isCapturing && activeCaptureMode === "finger" && !torchEnabled && (
                 <p className="mt-2 text-xs text-muted-foreground" role="status">
                   This browser could not confirm the camera light is on. The reading may be too faint; you can cancel and try a supported phone browser.
                 </p>
@@ -739,7 +790,7 @@ export default function UrgeWatch() {
               {isCapturing ? (
                 <div className="mt-5">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium">Keep holding still</span>
+                    <span className="font-medium">{activeCaptureMode === "face" ? "Keep your face in the guide" : "Keep your fingertip still"}</span>
                     <span className="font-semibold tabular-nums">{remainingSeconds}s remaining</span>
                   </div>
                   <div className="mt-2 h-2 overflow-hidden rounded-full bg-secondary" aria-label={`${CAPTURE_SECONDS - remainingSeconds} of ${CAPTURE_SECONDS} seconds captured`}>
@@ -753,7 +804,7 @@ export default function UrgeWatch() {
                     onClick={stopCapture}
                     className="min-tap mt-4 rounded-xl border border-border px-4 py-2 text-sm font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground"
                   >
-                    Cancel reading
+                    {activeCaptureMode === "face" ? "Cancel comparison" : "Cancel reading"}
                   </button>
                 </div>
               ) : isStartingCapture ? (
@@ -768,14 +819,24 @@ export default function UrgeWatch() {
                   </button>
                 </div>
               ) : (
-                <button
-                  type="button"
-                  onClick={startCapture}
-                  className="min-tap mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-primary bg-primary px-4 py-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:border-[#3f6250] hover:bg-[#3f6250]"
-                >
-                  <Camera className="h-4 w-4" aria-hidden="true" />
-                  Start 45-second check-in
-                </button>
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={() => startCapture("finger")}
+                    className="min-tap inline-flex w-full items-center justify-center gap-2 rounded-xl border border-primary bg-primary px-4 py-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:border-[#3f6250] hover:bg-[#3f6250]"
+                  >
+                    <Camera className="h-4 w-4" aria-hidden="true" />
+                    Fingertip check-in
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => startCapture("face")}
+                    className="min-tap inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-3.5 text-sm font-semibold text-foreground transition-colors hover:bg-secondary"
+                  >
+                    <Camera className="h-4 w-4" aria-hidden="true" />
+                    Face POS comparison
+                  </button>
+                </div>
               )}
               {cameraError && (
                 <div className="mt-4 flex gap-2 rounded-xl border border-[#d9b9aa] bg-[#f7ebe6] p-3 text-sm text-[#69443a]" role="alert">

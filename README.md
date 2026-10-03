@@ -42,9 +42,10 @@ The current server uses in-memory storage, so no database is needed to run it. D
 2. Open **Urges** from the bottom navigation. Enter last night's sleep, then start the 45-second check-in and allow camera and motion access when asked.
 3. Cover the rear camera and flash with a fingertip and hold still. The browser processes the frames locally; it saves the comparison if either method returns an estimate and asks you to retry if both fail.
 4. The same capture runs Orbit's red-channel estimator and a browser port of PPGbetter's luminance-peak method. To compare accuracy, enter a pulse value from a separate monitor measured at the same time; agreement between the two camera estimates alone does not establish accuracy.
-5. Add an urge or calm label to connect the moment to the latest Orbit reading. Use **Export CSV** to save readings and comparisons, or **Delete my data** to remove UrgeWatch records from that browser.
+5. For a separate face comparison, select **Face POS comparison**, allow the front camera, and keep your face inside the guide. It runs a browser-local adaptation of VitalLens POS alongside Orbit and PPGbetter on the same face-region frames. Face comparisons are not added to the fingertip baseline.
+6. Add an urge or calm label to connect the moment to the latest Orbit reading. Use **Export CSV** to save readings and comparisons, or **Delete my data** to remove UrgeWatch records from that browser.
 
-UrgeWatch stores readings, estimator comparisons, optional reference values, labels, and the optional support-person number in this browser's local storage. Camera frames are processed in memory and are not saved or uploaded. Clearing browser/site data removes the records. The pulse/HRV estimates are not medically validated and must not be used for diagnosis or treatment. Personal baseline rules need at least three readings; the experimental browser-based pattern model needs at least 30 labeled readings with both urge and calm examples.
+UrgeWatch stores readings, estimator comparisons, optional reference values, labels, and the optional support-person number in this browser's local storage. Camera frames are processed in memory and are not saved or uploaded. The VitalLens hosted service is not used. Clearing browser/site data removes the records. The pulse/HRV estimates are not medically validated and must not be used for diagnosis or treatment. Personal baseline rules need at least three readings; the experimental browser-based pattern model needs at least 30 labeled readings with both urge and calm examples.
 
 ## 📁 Project Structure
 
@@ -71,3 +72,5 @@ UrgeWatch stores readings, estimator comparisons, optional reference values, lab
 MIT — see [LICENSE](LICENSE).
 
 The PPGbetter-derived comparison method has a separate attribution and license note in [PPGbetter-NOTICE.md](client/src/lib/PPGbetter-NOTICE.md).
+
+The browser-local VitalLens POS adaptation has a separate attribution and license note in [VitalLens-NOTICE.md](client/src/lib/VitalLens-NOTICE.md).
