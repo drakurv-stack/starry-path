@@ -23,6 +23,11 @@ import { AppNav } from "@/components/app-nav";
 import { Card, CardContent } from "@/components/ui/card";
 import { EstimatorComparisonCard } from "@/components/urge-watch/estimator-comparison";
 import {
+  drawFaceWaveform,
+  FaceSignalOverlay,
+  type FaceSignalStatus,
+} from "@/components/urge-watch/face-signal-overlay";
+import {
   assessReading,
   buildUrgeCsv,
   estimatePpgBetter,
@@ -50,6 +55,35 @@ const CAPTURE_SECONDS = 45;
 
 function newId() {
   return globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function latestPosWindowPoint(samples: RgbSample[]) {
+  if (samples.length < 48) return null;
+
+  const window = samples.slice(-48);
+  const meanRed = window.reduce((sum, sample) => sum + sample.red, 0) / window.length;
+  const meanGreen = window.reduce((sum, sample) => sum + sample.green, 0) / window.length;
+  const meanBlue = window.reduce((sum, sample) => sum + sample.blue, 0) / window.length;
+  if (meanRed <= 0 || meanGreen <= 0 || meanBlue <= 0) return null;
+
+  const firstProjection: number[] = [];
+  const secondProjection: number[] = [];
+  for (const sample of window) {
+    const red = sample.red / meanRed;
+    const green = sample.green / meanGreen;
+    const blue = sample.blue / meanBlue;
+    firstProjection.push(green - blue);
+    secondProjection.push(-2 * red + green + blue);
+  }
+
+  const deviation = (values: number[]) => {
+    const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+    return Math.sqrt(values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / values.length);
+  };
+  const secondDeviation = deviation(secondProjection);
+  const tuning = secondDeviation > 1e-12 ? deviation(firstProjection) / secondDeviation : 0;
+  const last = window.length - 1;
+  return -(firstProjection[last] + tuning * secondProjection[last]);
 }
 
 function formatDateTime(iso: string) {
@@ -209,8 +243,14 @@ export default function UrgeWatch() {
   const [supportDraft, setSupportDraft] = useState(() => readUrgeDataset().supportNumber);
   const [referenceDrafts, setReferenceDrafts] = useState<Record<string, string>>({});
   const [comparisonMessage, setComparisonMessage] = useState("");
+  const [faceOverlayStats, setFaceOverlayStats] = useState<{
+    bpm: number | null;
+    fps: number;
+    status: FaceSignalStatus;
+  }>({ bpm: null, fps: 0, status: "CALIBRATING" });
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const faceSignalCanvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const frameRef = useRef<number | null>(null);
   const countdownRef = useRef<number | null>(null);
@@ -221,6 +261,10 @@ export default function UrgeWatch() {
   const samplesRef = useRef<RedSample[]>([]);
   const brightnessSamplesRef = useRef<BrightnessSample[]>([]);
   const rgbSamplesRef = useRef<RgbSample[]>([]);
+  const facePosTraceRef = useRef<number[]>([]);
+  const lastFaceOverlayUpdateRef = useRef(0);
+  const lastFaceEstimateAtRef = useRef(0);
+  const faceLiveBpmRef = useRef<number | null>(null);
   const motionDeltasRef = useRef<number[]>([]);
   const previousMotionRef = useRef<number | null>(null);
   const captureRunRef = useRef(0);
@@ -419,6 +463,12 @@ export default function UrgeWatch() {
     samplesRef.current = [];
     brightnessSamplesRef.current = [];
     rgbSamplesRef.current = [];
+    facePosTraceRef.current = [];
+    lastFaceOverlayUpdateRef.current = 0;
+    lastFaceEstimateAtRef.current = 0;
+    faceLiveBpmRef.current = null;
+    setFaceOverlayStats({ bpm: null, fps: 0, status: "CALIBRATING" });
+    drawFaceWaveform(faceSignalCanvasRef.current, []);
     motionDeltasRef.current = [];
     previousMotionRef.current = null;
     lastVideoTimeRef.current = -1;
@@ -541,7 +591,34 @@ export default function UrgeWatch() {
             timeMs,
             brightness: brightnessTotal / pixelCount,
           });
-          if (faceMode) rgbSamplesRef.current.push({ timeMs, red, green, blue });
+          if (faceMode) {
+            rgbSamplesRef.current.push({ timeMs, red, green, blue });
+            const posPoint = latestPosWindowPoint(rgbSamplesRef.current);
+            if (posPoint !== null) {
+              facePosTraceRef.current.push(posPoint);
+              if (facePosTraceRef.current.length > 300) facePosTraceRef.current.shift();
+              drawFaceWaveform(faceSignalCanvasRef.current, facePosTraceRef.current);
+            }
+
+            const elapsedSeconds = (performance.now() - startedAtRef.current) / 1000;
+            if (elapsedSeconds - lastFaceOverlayUpdateRef.current >= 1) {
+              lastFaceOverlayUpdateRef.current = elapsedSeconds;
+              if (elapsedSeconds >= 40 && elapsedSeconds - lastFaceEstimateAtRef.current >= 3) {
+                lastFaceEstimateAtRef.current = elapsedSeconds;
+                const liveEstimate = estimateVitalLensPos(rgbSamplesRef.current, elapsedSeconds);
+                faceLiveBpmRef.current = liveEstimate.quality === "good" ? liveEstimate.bpm : null;
+              }
+              setFaceOverlayStats({
+                bpm: faceLiveBpmRef.current,
+                fps: Math.round(rgbSamplesRef.current.length / Math.max(elapsedSeconds, 1)),
+                status: elapsedSeconds < 40
+                  ? "CALIBRATING"
+                  : faceLiveBpmRef.current === null
+                    ? "SIGNAL WEAK"
+                    : "TRACKING",
+              });
+            }
+          }
         }
         frameRef.current = requestAnimationFrame(sampleFrame);
       };
@@ -715,9 +792,12 @@ export default function UrgeWatch() {
                   aria-label={activeCaptureMode === "face" ? "Live front camera preview for face pulse comparison" : "Live rear camera preview for fingertip pulse capture"}
                 />
                 {isCapturing && activeCaptureMode === "face" && (
-                  <div className="pointer-events-none absolute inset-0 grid place-items-center" aria-hidden="true">
-                    <div className="h-2/3 w-1/2 rounded-[42%] border-2 border-dashed border-white/80 shadow-[0_0_0_999px_rgba(0,0,0,0.16)]" />
-                  </div>
+                  <FaceSignalOverlay
+                    canvasRef={faceSignalCanvasRef}
+                    bpm={faceOverlayStats.bpm}
+                    fps={faceOverlayStats.fps}
+                    status={faceOverlayStats.status}
+                  />
                 )}
                 {!isCapturing && (
                   <div className="grid aspect-[16/7] min-h-32 place-items-center px-6 text-center text-sm text-[#ffffff]">
@@ -734,7 +814,7 @@ export default function UrgeWatch() {
 
               <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
                 {activeCaptureMode === "face"
-                  ? "For a face comparison, center your face in the guide and stay still. The front-camera color signal is processed here and never uploaded."
+                  ? "For a face comparison, keep your face inside the red guide and the green sample box, use even front lighting, and stay still. Boxes are guides, not face tracking; frames and signal stay on this device."
                   : "For a fingertip check-in, sit still, cover the rear camera lens and flash with your fingertip, and keep gentle pressure for the full reading."}
               </p>
               {activeCaptureMode === "face" && !isCapturing && (
